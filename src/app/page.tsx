@@ -238,6 +238,8 @@ export default async function HomePage() {
                 <Link href="/signup" className="text-ink underline-offset-4 hover:underline">Create account</Link>
               </>
             )}
+            <Link href="/privacy" className="text-ink underline-offset-4 hover:underline">Privacy</Link>
+            <Link href="/terms" className="text-ink underline-offset-4 hover:underline">Terms</Link>
           </nav>
           <span className="text-mute sm:text-right">
             2026 · Your data belongs to you: export or delete it any time.

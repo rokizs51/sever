@@ -35,15 +35,25 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Public routes - allow access: the landing page ('/' exactly — the page
-  // itself routes signed-in visitors to the dashboard), auth pages, and the
-  // auth API endpoints.
-  if (
-    pathname === '/' ||
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/signup') ||
-    pathname.startsWith('/api/auth')
-  ) {
+  // Public routes - allow access: the landing page ('/' — it renders for
+  // signed-in users too and only swaps its nav links), auth pages, the auth
+  // API endpoints, the legal pages, and the crawler-facing metadata routes
+  // (.xml/.txt and the extension-free image routes are not covered by the
+  // matcher's asset exclusions, and bots never carry a session cookie).
+  const PUBLIC_PREFIXES = [
+    '/login',
+    '/signup',
+    '/api/auth',
+    '/privacy',
+    '/terms',
+    '/sitemap.xml',
+    '/robots.txt',
+    '/opengraph-image',
+    '/twitter-image',
+    '/icon',
+    '/apple-icon',
+  ];
+  if (pathname === '/' || PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) {
     return supabaseResponse;
   }
 

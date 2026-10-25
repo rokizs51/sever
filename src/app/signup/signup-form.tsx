@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { buttonCls } from '@/components/ui/button';
 
 const inputCls =
@@ -89,6 +90,13 @@ export default function SignupForm() {
       >
         {loading ? 'Signing up...' : 'Sign up'}
       </button>
+
+      <p className="text-xs text-mute">
+        By creating an account you agree to our{' '}
+        <Link href="/terms" className="underline underline-offset-2 hover:text-ink">Terms</Link>
+        {' '}and{' '}
+        <Link href="/privacy" className="underline underline-offset-2 hover:text-ink">Privacy policy</Link>.
+      </p>
     </form>
   );
 }

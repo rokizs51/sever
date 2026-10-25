@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Literata } from "next/font/google";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,6 +16,8 @@ const literata = Literata({
 });
 
 export const metadata: Metadata = {
+  // Needed so og/twitter meta emit absolute URLs for crawlers.
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Sever: one profile, a CV for every job",
     template: "%s · Sever",
