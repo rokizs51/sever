@@ -14,7 +14,10 @@ export async function listItems(
     .from('profile_items')
     .select('*')
     .eq('profile_id', profileId)
-    .order('position', { ascending: true });
+    // created_at breaks ties for rows sharing a position (manual items
+    // pre-dating position assignment are all 0).
+    .order('position', { ascending: true })
+    .order('created_at', { ascending: true });
 
   if (error) throw error;
   return (data ?? []).map(rowToProfileItem);

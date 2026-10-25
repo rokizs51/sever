@@ -103,11 +103,12 @@ export async function POST(request: Request) {
     const supabase = await createRouteClient(cookieStore);
     const profile = await getOrCreateProfile(supabase, user.id);
 
+    const existing = await listItems(supabase, profile.id);
+
     // Exactly one career snapshot, enforced server-side (the headline CV
     // channel is singular: orchestrate renders the first as doc.summary and
     // additional ones would be invisible-but-editable).
     if (type === 'career_snapshot') {
-      const existing = await listItems(supabase, profile.id);
       if (existing.some((i) => i.type === 'career_snapshot')) {
         return NextResponse.json(
           {
@@ -121,14 +122,19 @@ export async function POST(request: Request) {
       }
     }
 
+    // New items append to one global counter (the import-commit convention),
+    // so manual entries keep creation order instead of all landing at 0.
+    const basePosition = existing.reduce((max, item) => Math.max(max, item.position), -1);
+
     if (isBatch) {
       const items = await createItems(
         supabase,
         profile.id,
-        parsedList.map((data) => ({
+        parsedList.map((data, index) => ({
           type: type as ItemType,
           payload: data,
           canonicalText: canonicalTextFor(type as ItemType, data),
+          position: basePosition + 1 + index,
         }))
       );
       return NextResponse.json({ items }, { status: 201 });
@@ -138,6 +144,7 @@ export async function POST(request: Request) {
       type: type as ItemType,
       payload: parsedList[0],
       canonicalText: canonicalTextFor(type as ItemType, parsedList[0]),
+      position: basePosition + 1,
     });
 
     return NextResponse.json({ item }, { status: 201 });

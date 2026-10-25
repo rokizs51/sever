@@ -81,7 +81,7 @@ describe('POST /api/profile/items', () => {
     const supa = createSupaStub({
       from: {
         profiles: profileRow,
-        profile_items: { data: itemRow(), error: null },
+        profile_items: { data: [itemRow()], error: null },
       },
     });
     mockCreateRouteClient.mockResolvedValue(supa as never);
@@ -96,7 +96,24 @@ describe('POST /api/profile/items', () => {
       profile_id: 'profile-1',
       type: 'skill',
       canonical_text: 'Go (advanced)',
+      position: 1,
     });
+  });
+
+  it('assigns the next position after the highest existing one', async () => {
+    const supa = createSupaStub({
+      from: {
+        profiles: profileRow,
+        profile_items: { data: [itemRow({ position: 3 }), itemRow({ id: 'item-2', position: 7 })], error: null },
+      },
+    });
+    mockCreateRouteClient.mockResolvedValue(supa as never);
+
+    const res = await post({ type: 'skill', payload: { name: 'Go', level: 'advanced' } });
+    expect(res.status).toBe(201);
+
+    const insert = supa.calls.from.find((c) => c.table === 'profile_items' && c.method === 'insert');
+    expect(insert?.args).toMatchObject({ position: 8 });
   });
 
   it('rejects an unknown item type with 400', async () => {
@@ -166,6 +183,8 @@ describe('POST /api/profile/items', () => {
       'Go (advanced)',
       'Rust (Expert)',
     ]);
+    // Existing rows are position 0/0 → batch appends as 1 and 2.
+    expect(inserts[0].args.map((r: Record<string, unknown>) => r.position)).toEqual([1, 2]);
   });
 
   it('rejects a batch whose entry fails the schema and inserts nothing', async () => {
@@ -190,7 +209,7 @@ describe('POST /api/profile/items', () => {
       from: {
         profiles: profileRow,
         profile_items: {
-          data: itemRow({ id: 'exp-1', type: 'experience', payload: { company: 'Acme', role: 'Dev', start: '2024', end: '', bullets: [] }, canonical_text: 'Dev — Acme (2024–present)' }),
+          data: [itemRow({ id: 'exp-1', type: 'experience', payload: { company: 'Acme', role: 'Dev', start: '2024', end: '', bullets: [] }, canonical_text: 'Dev — Acme (2024–present)' })],
           error: null,
         },
       },
