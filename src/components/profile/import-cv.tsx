@@ -103,7 +103,9 @@ export default function ImportCv({
   existingItems: ProfileItem[];
   onImported: () => Promise<void>;
 }) {
-  const [open, setOpen] = useState(false);
+  // Deep link from the dashboard's empty state (/profile?import=1) opens the
+  // panel directly; client-only component, so reading location is safe here.
+  const [open, setOpen] = useState(() => window.location.search.includes('import=1'));
   const [text, setText] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);

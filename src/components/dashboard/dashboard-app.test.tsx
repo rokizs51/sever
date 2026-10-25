@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import DashboardApp from './dashboard-app';
 import type { ProfileItem } from '@/lib/domain/types';
 import type { ResumeSummary } from '@/lib/db/resumes';
+import { SAMPLE_ENTRIES } from '@/lib/domain/sample-profile';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -72,6 +73,47 @@ describe('DashboardApp', () => {
     expect(await screen.findByText('33%')).toBeInTheDocument();
     expect(screen.getByText(/3\/9 sections/)).toBeInTheDocument();
     expect(screen.getByLabelText('Your details: complete')).toBeInTheDocument();
+  });
+
+  const emptyBody = {
+    '/api/profile/items': { items: [] },
+    '/api/resumes': { resumes: [], quota: { used: 0, cap: 50 } },
+    '/api/profile': {
+      profile: {
+        personal: { fullName: '', email: '', phone: null, location: null, links: [] },
+      },
+    },
+  };
+
+  it('puts record/import first and the posting box second on an empty profile', async () => {
+    serve(emptyBody);
+    render(<DashboardApp />);
+
+    expect(await screen.findByRole('link', { name: /import an existing cv/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /record your profile/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /load the sample record/i })).toBeInTheDocument();
+    expect(screen.queryByText(/let’s tailor your cv/i)).not.toBeInTheDocument();
+    // The generic wizard path stays reachable, just demoted.
+    expect(screen.getByLabelText('Paste a job description to start a new CV')).toBeInTheDocument();
+  });
+
+  it('loads the sample through the existing items API, then refreshes', async () => {
+    serve(emptyBody);
+    render(<DashboardApp />);
+    const button = await screen.findByRole('button', { name: /load the sample record/i });
+    mockFetch.mockClear();
+
+    fireEvent.click(button);
+
+    expect(await screen.findByText(/sample record loaded/i)).toBeInTheDocument();
+    const posts = mockFetch.mock.calls.filter(
+      ([url, init]) => url === '/api/profile/items' && (init as { method?: string })?.method === 'POST'
+    );
+    expect(posts).toHaveLength(SAMPLE_ENTRIES.length);
+    // career_snapshot must go as the single-payload shape the API demands.
+    const firstBody = JSON.parse((posts[0][1] as RequestInit).body as string);
+    expect(firstBody).toHaveProperty('payload');
+    expect(firstBody).not.toHaveProperty('payloads');
   });
 
   it('shows a loadable error instead of pretending the user is signed out', async () => {

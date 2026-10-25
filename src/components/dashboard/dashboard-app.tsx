@@ -14,6 +14,7 @@ import Chip from '@/components/ui/chip';
 import Progress from '@/components/ui/progress';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { buttonCls } from '@/components/ui/button';
+import { SAMPLE_ENTRIES } from '@/lib/domain/sample-profile';
 
 // Every section counts toward completeness — derived, not re-listed, so a
 // new ItemType can't silently skip the panel (TYPE_FIELDS is Record<ItemType>).
@@ -36,35 +37,41 @@ export default function DashboardApp() {
   const [personal, setPersonal] = useState<PersonalInfo | null>(null);
   const [omnibox, setOmnibox] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [sampleBusy, setSampleBusy] = useState(false);
+  const [sampleMsg, setSampleMsg] = useState('');
+  const [sampleError, setSampleError] = useState('');
+
+  const load = async () => {
+    const [iRes, rRes, pRes] = await Promise.all([
+      fetch('/api/profile/items'),
+      fetch('/api/resumes'),
+      fetch('/api/profile'),
+    ]);
+
+    // Only an absent/expired session gets bounced; a 500 is ours to show,
+    // not a reason to claim the user was signed out.
+    if (iRes.status === 401 || rRes.status === 401 || pRes.status === 401) {
+      window.location.href = '/login';
+      return;
+    }
+    if (!iRes.ok || !rRes.ok || !pRes.ok) throw new Error('load failed');
+
+    const [iData, rData, pData] = await Promise.all([
+      iRes.json(),
+      rRes.json(),
+      pRes.json(),
+    ]);
+    setItems(iData.items);
+    setResumes(rData.resumes);
+    setQuota(rData.quota);
+    setPersonal(pData.profile.personal);
+  };
 
   useEffect(() => {
-    (async () => {
-      const [iRes, rRes, pRes] = await Promise.all([
-        fetch('/api/profile/items'),
-        fetch('/api/resumes'),
-        fetch('/api/profile'),
-      ]);
-
-      // Only an absent/expired session gets bounced; a 500 is ours to show,
-      // not a reason to claim the user was signed out.
-      if (iRes.status === 401 || rRes.status === 401 || pRes.status === 401) {
-        window.location.href = '/login';
-        return;
-      }
-      if (!iRes.ok || !rRes.ok || !pRes.ok) throw new Error('load failed');
-
-      const [iData, rData, pData] = await Promise.all([
-        iRes.json(),
-        rRes.json(),
-        pRes.json(),
-      ]);
-      setItems(iData.items);
-      setResumes(rData.resumes);
-      setQuota(rData.quota);
-      setPersonal(pData.profile.personal);
-    })().catch(() =>
+    load().catch(() =>
       setLoadError('Could not load your dashboard. Check your connection and refresh.')
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only
   }, []);
 
   // The landing page hands a pasted posting over on this channel; adopt it
@@ -152,47 +159,141 @@ export default function DashboardApp() {
     router.push('/generate');
   };
 
+  // A profile with neither entries nor name/email has nothing to tailor from;
+  // the hero then puts recording first and demotes the posting box to a card.
+  const recordFirst = items.length === 0 && !counts.detailsFilled;
+
+  const loadSample = async () => {
+    setSampleBusy(true);
+    setSampleError('');
+    try {
+      for (const entry of SAMPLE_ENTRIES) {
+        // career_snapshot is single-only by API design; the rest batch.
+        const body =
+          entry.type === 'career_snapshot'
+            ? { type: entry.type, payload: entry.payloads[0] }
+            : { type: entry.type, payloads: entry.payloads };
+        const res = await fetch('/api/profile/items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error('sample load failed');
+      }
+      await load();
+      setSampleMsg('Sample record loaded — every line is editable or deletable.');
+    } catch {
+      setSampleError('Could not load the sample record. Try recording your profile instead.');
+    } finally {
+      setSampleBusy(false);
+    }
+  };
+
+  // Omnibox, wired to the wizard through the draft channel; used in both hero
+  // variants.
+  const omniboxBlock = (
+    <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <textarea
+        aria-label="Paste a job description to start a new CV"
+        value={omnibox}
+        onChange={(e) => setOmnibox(e.target.value)}
+        rows={2}
+        placeholder="Paste a job description here…"
+        className="min-h-12 flex-1 resize-none border border-transparent bg-surface px-4 py-3 text-sm text-ink placeholder:text-faint focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+      />
+      <button
+        type="button"
+        onClick={startFromOmnibox}
+        disabled={!omnibox.trim()}
+        className={buttonCls('primary', 'lg', 'shrink-0')}
+      >
+        <Plus aria-hidden size={18} weight="bold" />
+        Build a CV
+      </button>
+    </div>
+  );
+
   return (
     <main className="px-4 py-6 sm:px-8">
       <div className="mx-auto w-full max-w-4xl space-y-10">
+        {/* Outside the hero: the success state replaces the sample hero, so a
+            message inside it would never render, let alone be announced. */}
+        {sampleMsg && (
+          <p role="status" className="text-sm text-ink">
+            {sampleMsg}
+          </p>
+        )}
+        {sampleError && (
+          <p role="alert" className="text-sm text-tone-red">
+            {sampleError}
+          </p>
+        )}
         {/* Hero: one full ink field, the page's single deliberate inversion */}
-        <section
-          aria-label="Start a new CV"
-          className="bg-ink px-6 py-8 text-background sm:px-8"
-        >
-          <div className="relative">
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              Let&apos;s tailor your CV
-            </h1>
-            <p className="mt-1 text-sm text-background/75">
-              One profile, a CV for every job. Paste a posting and go.
-            </p>
+        {recordFirst ? (
+          <>
+            <section
+              aria-label="Start with your record"
+              className="bg-ink px-6 py-8 text-background sm:px-8"
+            >
+              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                First the record. Then the CV.
+              </h1>
+              <p className="mt-1 max-w-[52ch] text-sm text-background/75">
+                Sever tailors only what you have actually recorded — nothing
+                is invented. Add your own experience, or load a sample record
+                to see how the product works.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link href="/profile?import=1" className={buttonCls('primary', 'lg')}>
+                  Import an existing CV
+                </Link>
+                <Link href="/profile" className={buttonCls('secondary', 'lg')}>
+                  Record your profile
+                </Link>
+                <button
+                  type="button"
+                  onClick={loadSample}
+                  disabled={sampleBusy}
+                  className={buttonCls('soft', 'lg')}
+                >
+                  {sampleBusy ? 'Loading…' : 'Load the sample record'}
+                </button>
+              </div>
+            </section>
 
-            {/* Omnibox, wired to the wizard through the draft channel */}
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <textarea
-                aria-label="Paste a job description to start a new CV"
-                value={omnibox}
-                onChange={(e) => setOmnibox(e.target.value)}
-                rows={2}
-                placeholder="Paste a job description here…"
-                className="min-h-12 flex-1 resize-none border border-transparent bg-surface px-4 py-3 text-sm text-ink placeholder:text-faint focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-              <button
-                type="button"
-                onClick={startFromOmnibox}
-                disabled={!omnibox.trim()}
-                className={buttonCls('primary', 'lg', 'shrink-0')}
-              >
-                <Plus aria-hidden size={18} weight="bold" />
-                Build a CV
-              </button>
+            {/* The generic wizard path, second for a user with nothing on file. */}
+            <section aria-label="Start from a posting">
+              <Card className="p-6">
+                <SectionHeading>Or start from a posting</SectionHeading>
+                <p className="mt-1 text-sm text-mute">
+                  A CV for every job — once there is something to tailor from.
+                </p>
+                {omniboxBlock}
+                <p className="mt-2 text-xs text-mute">
+                  We only use what&apos;s in your profile. Nothing is invented.
+                </p>
+              </Card>
+            </section>
+          </>
+        ) : (
+          <section
+            aria-label="Start a new CV"
+            className="bg-ink px-6 py-8 text-background sm:px-8"
+          >
+            <div className="relative">
+              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                Let&apos;s tailor your CV
+              </h1>
+              <p className="mt-1 text-sm text-background/75">
+                One profile, a CV for every job. Paste a posting and go.
+              </p>
+              {omniboxBlock}
+              <p className="mt-2 text-xs text-background/75">
+                We only use what&apos;s in your profile. Nothing is invented.
+              </p>
             </div>
-            <p className="mt-2 text-xs text-background/75">
-              We only use what&apos;s in your profile. Nothing is invented.
-            </p>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Key numbers */}
         <section aria-label="At a glance">
