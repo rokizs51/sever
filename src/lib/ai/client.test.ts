@@ -245,4 +245,35 @@ describe('structured-output retry policy (real createGenAI, stubbed transport)',
     expect(out.matches[0].status).toBe('supported');
     expect(generateText).toHaveBeenCalledTimes(2);
   });
+
+  it('extractCv retries malformed output once, then fails with CvNotParseableError', async () => {
+    env();
+    const { createGenAI } = await import('./client');
+    const { CvNotParseableError } = await import('./types');
+    const ai = createGenAI();
+    vi.mocked(generateText).mockResolvedValue({ text: 'I could not comply.' } as never);
+
+    await expect(ai.extractCv('Alex Chen — Senior Engineer')).rejects.toBeInstanceOf(
+      CvNotParseableError
+    );
+    expect(generateText).toHaveBeenCalledTimes(2);
+  });
+
+  it('extractCv applies the lenient draft defaults to a valid response', async () => {
+    env();
+    const { createGenAI } = await import('./client');
+    const ai = createGenAI();
+    vi.mocked(generateText).mockResolvedValue({
+      text: '{"personal":{"fullName":"Alex","phone":null},"experience":[{"company":"Acme","role":"Dev","start":"Mar 2022","end":"Present","bullets":["• Shipped X"]}],"skills":[{"name":"React"}]}',
+    } as never);
+
+    const out = await ai.extractCv('Alex Chen — Senior Engineer');
+
+    expect(out.personal.fullName).toBe('Alex');
+    expect(out.personal.phone).toBe('');
+    expect(out.experience[0].company).toBe('Acme');
+    expect(out.experience[0].technologies).toEqual([]);
+    expect(out.skills[0].name).toBe('React');
+    expect(out.projects).toEqual([]);
+  });
 });

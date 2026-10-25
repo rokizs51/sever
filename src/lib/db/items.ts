@@ -55,14 +55,21 @@ export async function createItem(
 export async function createItems(
   supa: SupabaseClient,
   profileId: string,
-  inputs: { type: ItemType; payload: Record<string, unknown>; canonicalText: string }[]
+  inputs: {
+    type: ItemType;
+    payload: Record<string, unknown>;
+    canonicalText: string;
+    position?: number;
+    source?: 'manual' | 'import';
+  }[]
 ): Promise<ProfileItem[]> {
   const rows = inputs.map((input) => ({
     profile_id: profileId,
     type: input.type,
     payload: input.payload,
     canonical_text: input.canonicalText,
-    position: 0,
+    position: input.position ?? 0,
+    source: input.source ?? null,
   }));
 
   const { data, error } = await supa.from('profile_items').insert(rows).select('*');

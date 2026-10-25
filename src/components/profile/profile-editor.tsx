@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { CheckCircle } from '@phosphor-icons/react';
 import type { ItemType, ProfileItem } from '@/lib/domain/types';
 import ItemEditor from './item-editor';
+import ImportCv from './import-cv';
 import SectionForm from './section-form';
 import SkillsSection, { type SkillDraft } from './skills-section';
 import { TYPE_LABELS } from './fields';
@@ -120,6 +121,7 @@ export default function ProfileEditor() {
 
   return (
     <div className="space-y-10">
+      <ImportCv existingItems={items} onImported={load} />
       <PersonalSection personal={personal} onSaved={load} />
 
       {SECTION_ORDER.map((type) => {

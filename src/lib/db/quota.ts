@@ -52,14 +52,16 @@ export async function currentUsage(
 }
 
 /**
- * Record a generation for a user (upsert on user_id + month).
- * Pass an explicit `now` to make the month key deterministic in tests.
+ * Record LLM usage for a user (upsert on user_id + month). `generations`
+ * defaults to 1 for a CV generation; pass 0 for spend-only calls (CV import)
+ * so they are visible to the global budget without consuming the monthly cap.
  */
 export async function recordGeneration(
   supa: SupabaseClient,
   userId: string,
   costMicros: number,
-  now?: Date
+  now?: Date,
+  generations = 1
 ): Promise<void> {
   const month = monthKey(now ?? new Date());
 
@@ -78,7 +80,7 @@ export async function recordGeneration(
     const { error: updateError } = await supa
       .from('generation_quota')
       .update({
-        generations: (existing.generations as number) + 1,
+        generations: (existing.generations as number) + generations,
         llm_cost_micros: (existing.llm_cost_micros as number) + costMicros,
       })
       .eq('user_id', userId)
@@ -89,7 +91,7 @@ export async function recordGeneration(
     const { error: insertError } = await supa.from('generation_quota').insert({
       user_id: userId,
       month,
-      generations: 1,
+      generations,
       llm_cost_micros: costMicros,
     });
 

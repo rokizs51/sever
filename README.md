@@ -5,6 +5,10 @@ education) and generates an ATS-friendly, honest CV tailored to a specific job
 description. Paste a posting, optionally run a job-match analysis first, then
 generate — every rewrite is auditable and you accept or revert it.
 
+Already have a CV? Import it as pasted text or a PDF: Sever extracts the
+entries into a review screen, and nothing reaches your profile until you
+approve it.
+
 Honesty is enforced as code, not as prompt advice:
 
 - a rewrite that adds a number your profile doesn't contain is downgraded to
@@ -18,7 +22,8 @@ Honesty is enforced as code, not as prompt advice:
 
 Next.js (App Router) · Supabase (auth + Postgres with RLS, anon key only — no
 service-role key anywhere) · Anthropic-SDK-compatible AI endpoint (any plan
-that speaks it, e.g. Qwen) · `@react-pdf/renderer` for the PDF.
+that speaks it, e.g. Qwen) · `unpdf` for reading uploaded PDFs ·
+`@react-pdf/renderer` for the PDF.
 
 > Note: this runs on a Next.js version with breaking changes vs. common
 > training data. `AGENTS.md` (auto-managed by `next dev`) tells coding agents

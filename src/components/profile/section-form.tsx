@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Plus } from '@phosphor-icons/react';
 import type { ItemType } from '@/lib/domain/types';
 import { TYPE_FIELDS, TYPE_LABELS, formToPayload, type FormValues } from './fields';
+import FieldInputs from './field-inputs';
 import Card from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -11,11 +12,6 @@ interface SectionFormProps {
   type: ItemType;
   onCreate: (payload: Record<string, unknown>) => Promise<void>;
 }
-
-const inputCls =
-  'w-full  border border-line-2 bg-surface px-4 py-2 text-sm text-ink transition-colors placeholder:text-faint focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30';
-const textareaCls =
-  'w-full resize-y  border border-line-2 bg-surface px-4 py-3 text-sm text-ink transition-colors placeholder:text-faint focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30';
 
 /**
  * Collapsed "Add …" pill that expands into plain-language fields for one
@@ -58,35 +54,12 @@ export default function SectionForm({ type, onCreate }: SectionFormProps) {
 
   return (
     <Card border="border-primary/50" className="p-5">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {defs.map((def) => (
-          <div key={def.key} className={def.kind === 'textarea' || def.kind === 'lines' ? 'sm:col-span-2' : ''}>
-            <label
-              htmlFor={`add-${type}-${def.key}`}
-              className="mb-1 block text-xs font-medium text-mute"
-            >
-              {def.label}
-            </label>
-            {def.kind === 'textarea' || def.kind === 'lines' ? (
-              <textarea
-                id={`add-${type}-${def.key}`}
-                rows={3}
-                value={values[def.key] ?? ''}
-                onChange={(e) => setValues((p) => ({ ...p, [def.key]: e.target.value }))}
-                className={textareaCls}
-              />
-            ) : (
-              <input
-                id={`add-${type}-${def.key}`}
-                type={def.kind === 'number' ? 'number' : 'text'}
-                value={values[def.key] ?? ''}
-                onChange={(e) => setValues((p) => ({ ...p, [def.key]: e.target.value }))}
-                className={inputCls}
-              />
-            )}
-          </div>
-        ))}
-      </div>
+      <FieldInputs
+        idPrefix={`add-${type}`}
+        defs={defs}
+        values={values}
+        onChange={(key, value) => setValues((p) => ({ ...p, [key]: value }))}
+      />
 
       {error && (
         <div role="alert" className="mt-3  bg-wash-red px-3 py-2 text-sm text-tone-red">

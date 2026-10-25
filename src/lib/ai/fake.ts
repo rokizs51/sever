@@ -1,5 +1,6 @@
 import type { GenAI, EnhanceRequest, SummaryRequest, SkillGroup } from './types';
 import type { JdExtraction, Suggestion } from '@/lib/domain/types';
+import type { CvImportDraft } from '@/lib/domain/cv-import';
 import type { MatchAnalysisRequest, MatchAnalysisModelOutput } from '@/lib/match/match-types';
 
 /**
@@ -11,6 +12,7 @@ export interface FakeGenAICalls {
   composeSummary: SummaryRequest[];
   groupSkills: string[][];
   analyzeMatch: MatchAnalysisRequest[];
+  extractCv: string[];
 }
 
 /**
@@ -19,6 +21,21 @@ export interface FakeGenAICalls {
 export interface FakeGenAI extends GenAI {
   calls: FakeGenAICalls;
 }
+
+/**
+ * Default CV draft for tests.
+ */
+const defaultCvDraft: CvImportDraft = {
+  personal: { fullName: '', email: '', phone: '', location: '', links: [] },
+  summary: null,
+  experience: [],
+  projects: [],
+  education: [],
+  certifications: [],
+  awards: [],
+  skills: [],
+  languages: [],
+};
 
 /**
  * Default extraction result for tests.
@@ -44,6 +61,7 @@ export function makeFakeGenAI(overrides?: Partial<GenAI>): FakeGenAI {
     composeSummary: [],
     groupSkills: [],
     analyzeMatch: [],
+    extractCv: [],
   };
 
   return {
@@ -81,6 +99,14 @@ export function makeFakeGenAI(overrides?: Partial<GenAI>): FakeGenAI {
       }
       // Default: no grouping — consumers treat it as a flat skills block.
       return [];
+    },
+
+    async extractCv(cvText: string): Promise<CvImportDraft> {
+      calls.extractCv.push(cvText);
+      if (overrides?.extractCv) {
+        return overrides.extractCv(cvText);
+      }
+      return defaultCvDraft;
     },
 
     async analyzeMatch(req: MatchAnalysisRequest): Promise<MatchAnalysisModelOutput> {

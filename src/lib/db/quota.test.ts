@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { monthKey, GENERATIONS_CAP } from './quota';
+import { monthKey, GENERATIONS_CAP, recordGeneration } from './quota';
+import { createSupaStub } from '@/test-helpers/supa-stub';
 
 describe('quota', () => {
   describe('monthKey', () => {
@@ -28,6 +29,24 @@ describe('quota', () => {
   describe('GENERATIONS_CAP', () => {
     it('is 50', () => {
       expect(GENERATIONS_CAP).toBe(50);
+    });
+  });
+
+  describe('recordGeneration', () => {
+    it('records spend without consuming a generation when generations=0', async () => {
+      const supa = createSupaStub({
+        from: { generation_quota: { data: null, error: null } },
+      });
+
+      await recordGeneration(supa as never, 'user-1', 42, new Date('2026-10-15T12:00:00Z'), 0);
+
+      const insert = supa.calls.from.find((call) => call.method === 'insert');
+      expect(insert?.args).toMatchObject({
+        user_id: 'user-1',
+        month: '2026-10',
+        generations: 0,
+        llm_cost_micros: 42,
+      });
     });
   });
 });

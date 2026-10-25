@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { PushPin, ArrowUUpLeft } from '@phosphor-icons/react';
 import type { ProfileItem } from '@/lib/domain/types';
 import { TYPE_FIELDS, payloadToForm, formToPayload, type FormValues } from './fields';
+import FieldInputs from './field-inputs';
 import Card from '@/components/ui/card';
 import Chip from '@/components/ui/chip';
 import { Button } from '@/components/ui/button';
@@ -19,11 +20,6 @@ interface ItemEditorProps {
   onPatch: (body: Record<string, unknown>) => Promise<void>;
   onDelete?: () => Promise<void>;
 }
-
-const inputCls =
-  'w-full  border border-line-2 bg-surface px-4 py-2 text-sm text-ink transition-colors placeholder:text-faint focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30';
-const textareaCls =
-  'w-full resize-y  border border-line-2 bg-surface px-4 py-3 text-sm text-ink transition-colors placeholder:text-faint focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30';
 
 export default function ItemEditor({ item, onPatch, onDelete }: ItemEditorProps) {
   const defs = TYPE_FIELDS[item.type];
@@ -55,6 +51,7 @@ export default function ItemEditor({ item, onPatch, onDelete }: ItemEditorProps)
         <span className="text-sm font-medium text-ink">
           {item.canonicalText.split('\n')[0].slice(0, 60)}
         </span>
+        {item.source === 'import' && <Chip tone="neutral">Imported</Chip>}
         {item.provenance.length > 0 && <Chip>Enhanced</Chip>}
         {item.pinned && (
           <Chip tone="amber">
@@ -64,35 +61,7 @@ export default function ItemEditor({ item, onPatch, onDelete }: ItemEditorProps)
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {defs.map((def) => (
-          <div key={def.key} className={def.kind === 'textarea' || def.kind === 'lines' ? 'sm:col-span-2' : ''}>
-            <label
-              htmlFor={`item-${item.id}-${def.key}`}
-              className="mb-1 block text-xs font-medium text-mute"
-            >
-              {def.label}
-            </label>
-            {def.kind === 'textarea' || def.kind === 'lines' ? (
-              <textarea
-                id={`item-${item.id}-${def.key}`}
-                rows={def.kind === 'lines' ? 4 : 3}
-                value={values[def.key] ?? ''}
-                onChange={(e) => setValue(def.key, e.target.value)}
-                className={textareaCls}
-              />
-            ) : (
-              <input
-                id={`item-${item.id}-${def.key}`}
-                type={def.kind === 'number' ? 'number' : 'text'}
-                value={values[def.key] ?? ''}
-                onChange={(e) => setValue(def.key, e.target.value)}
-                className={inputCls}
-              />
-            )}
-          </div>
-        ))}
-      </div>
+      <FieldInputs idPrefix={`item-${item.id}`} defs={defs} values={values} onChange={setValue} />
 
       {error && (
         <div role="alert" className="mt-3  bg-wash-red px-3 py-2 text-sm text-tone-red">
