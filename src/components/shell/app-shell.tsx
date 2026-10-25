@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -19,11 +19,9 @@ const COLLAPSE_KEY = 'sidebar-collapsed';
 const COLLAPSE_EVENT = 'sidebar-collapsed-change';
 
 // Top bar is separated by a tone step, not a line. Only the drawer truly
-// floats, so it is the one thing allowed a shadow.
+// floats, so it is the one thing allowed a shadow (see the <dialog> class).
 const TOPBAR_CLS =
   'sticky top-0 z-40 flex items-center justify-between bg-surface px-4 py-2 lg:hidden';
-const DRAWER_CLS =
-  'absolute inset-y-0 left-0 flex w-72 flex-col border-r border-line bg-surface shadow-xl'; // taste-skill-ignore
 
 // Owner's collapse preference lives in localStorage — an external store.
 // useSyncExternalStore (not an effect + setState) keeps hydration correct:
@@ -91,6 +89,7 @@ function NavLinks({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: 
                     href={href}
                     onClick={onNavigate}
                     aria-current={active ? 'page' : undefined}
+                    aria-label={collapsed ? label : undefined}
                     title={collapsed ? label : undefined}
                     className={
                       'flex min-h-10 items-center gap-3 border-l-[3px] border-transparent px-3 py-2 text-sm transition-colors ' +
@@ -131,6 +130,16 @@ export default function AppShell({ children, email }: { children: ReactNode; ema
     getCollapsedServerSnapshot
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerRef = useRef<HTMLDialogElement>(null);
+
+  // The drawer is a native <dialog>: showModal() brings the focus trap, the
+  // initial focus, the Escape handling and the focus restore for free.
+  useEffect(() => {
+    const el = drawerRef.current;
+    if (!el) return;
+    if (drawerOpen && !el.open) el.showModal();
+    if (!drawerOpen && el.open) el.close();
+  }, [drawerOpen]);
 
   const toggleCollapsed = useCallback(() => {
     try {
@@ -141,17 +150,11 @@ export default function AppShell({ children, email }: { children: ReactNode; ema
     }
   }, []);
 
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setDrawerOpen(false);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [drawerOpen]);
-
   return (
     <div className="min-h-dvh lg:flex">
       {/* Desktop sidebar */}
       <aside
+        aria-label="Sidebar"
         className={
           'sticky top-0 hidden h-dvh shrink-0 flex-col bg-surface lg:flex ' +
           (collapsed ? 'w-[76px]' : 'w-60')
@@ -188,7 +191,7 @@ export default function AppShell({ children, email }: { children: ReactNode; ema
       </aside>
 
       {/* Mobile sticky top bar */}
-      <div className={TOPBAR_CLS}>
+      <header className={TOPBAR_CLS}>
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
@@ -199,35 +202,40 @@ export default function AppShell({ children, email }: { children: ReactNode; ema
         </button>
         <Wordmark />
         <span className="size-10" aria-hidden />
-      </div>
+      </header>
 
-      {/* Mobile drawer */}
-      {drawerOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
-          <div
-            className="absolute inset-0 bg-ink/40"
+      {/* Mobile drawer (native dialog; opened via showModal in the effect) */}
+      <dialog
+        ref={drawerRef}
+        aria-label="Navigation"
+        onClose={() => setDrawerOpen(false)}
+        onClick={(e) => {
+          // A click outside the dialog's own rectangle lands on its backdrop.
+          const r = e.currentTarget.getBoundingClientRect();
+          if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) {
+            setDrawerOpen(false);
+          }
+        }}
+        // hidden/open:flex — the flex utility would otherwise override the
+        // dialog's UA display:none and leave the drawer always on screen.
+        className="fixed inset-0 z-50 m-0 hidden h-dvh w-72 max-w-[85vw] flex-col border-r border-line bg-surface p-0 shadow-xl open:flex [&::backdrop]:bg-ink/40 lg:hidden" // taste-skill-ignore: the drawer is the one surface allowed a shadow
+      >
+        <div className="flex items-center justify-between px-2 pt-3">
+          <Wordmark />
+          <button
+            type="button"
             onClick={() => setDrawerOpen(false)}
-            aria-hidden
-          />
-          <div className={DRAWER_CLS}>
-            <div className="flex items-center justify-between px-2 pt-3">
-              <Wordmark />
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(false)}
-                aria-label="Close menu"
-                className="mr-2 flex size-10 items-center justify-center text-mute transition-colors hover:bg-surface-2 hover:text-ink"
-              >
-                <X aria-hidden size={20} />
-              </button>
-            </div>
-            <NavLinks collapsed={false} onNavigate={() => setDrawerOpen(false)} />
-            <div className="px-3 py-3">
-              <SignOutButton variant="nav" onNavigate={() => setDrawerOpen(false)} />
-            </div>
-          </div>
+            aria-label="Close menu"
+            className="mr-2 flex size-10 items-center justify-center text-mute transition-colors hover:bg-surface-2 hover:text-ink"
+          >
+            <X aria-hidden size={20} />
+          </button>
         </div>
-      )}
+        <NavLinks collapsed={false} onNavigate={() => setDrawerOpen(false)} />
+        <div className="px-3 py-3">
+          <SignOutButton variant="nav" onNavigate={() => setDrawerOpen(false)} />
+        </div>
+      </dialog>
 
       {/* Page content */}
       <div className="flex min-w-0 flex-1 flex-col">

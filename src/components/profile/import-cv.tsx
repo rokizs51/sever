@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { UploadSimple } from '@phosphor-icons/react';
 import type { ProfileItem } from '@/lib/domain/types';
 import type { FinalizedCvImport } from '@/lib/domain/cv-import';
@@ -8,7 +8,7 @@ import { importKey } from '@/lib/domain/cv-import';
 import { canonicalTextFor } from '@/lib/domain/canonical';
 import { PAYLOAD_SCHEMAS } from '@/lib/domain/schemas';
 import { fieldHint } from '@/lib/domain/validation';
-import { TYPE_FIELDS, TYPE_LABELS, payloadToForm, formToPayload, type FormValues } from './fields';
+import { TYPE_FIELDS, TYPE_LABELS, payloadToForm, formToPayload, fieldLabelFor, type FormValues } from './fields';
 import FieldInputs from './field-inputs';
 import Card, { SectionHeading } from '@/components/ui/card';
 import Chip from '@/components/ui/chip';
@@ -106,6 +106,15 @@ export default function ImportCv({
   // Deep link from the dashboard's empty state (/profile?import=1) opens the
   // panel directly; client-only component, so reading location is safe here.
   const [open, setOpen] = useState(() => window.location.search.includes('import=1'));
+  // Open/collapse swaps whole cards; keep the keyboard user's focus on the
+  // moving target instead of dropping it to the document body.
+  const collapsedBtnRef = useRef<HTMLButtonElement>(null);
+  const firstRun = useRef(true);
+  useEffect(() => {
+    if (open) document.getElementById('cv-import-text')?.focus();
+    else if (!firstRun.current) collapsedBtnRef.current?.focus();
+    firstRun.current = false;
+  }, [open]);
   const [text, setText] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -210,7 +219,7 @@ export default function ImportCv({
       const payload = formToPayload(TYPE_FIELDS[item.type], edits[index] ?? {});
       const parsed = PAYLOAD_SCHEMAS[item.type].safeParse(payload);
       if (!parsed.success) {
-        setError(`${TYPE_LABELS[item.type]} entry: ${fieldHint(parsed.error.issues)}`);
+        setError(`${TYPE_LABELS[item.type]} entry: ${fieldHint(parsed.error.issues, fieldLabelFor(item.type))}`);
         return;
       }
       items.push({ type: item.type, payload: parsed.data });
@@ -274,7 +283,7 @@ export default function ImportCv({
             it. Nothing is added until you say so.
           </p>
         </div>
-        <Button variant="secondary" onClick={() => setOpen(true)} className="shrink-0">
+        <Button ref={collapsedBtnRef} variant="secondary" onClick={() => setOpen(true)} className="shrink-0">
           <UploadSimple aria-hidden size={18} weight="bold" />
           Import a CV
         </Button>
@@ -348,7 +357,7 @@ export default function ImportCv({
                 <button
                   type="button"
                   onClick={() => setFile(null)}
-                  className="text-xs font-medium text-primary hover:underline"
+                  className="flex min-h-9 items-center px-1.5 text-xs font-medium text-primary hover:underline"
                 >
                   Remove
                 </button>

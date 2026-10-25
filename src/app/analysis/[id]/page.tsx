@@ -44,7 +44,7 @@ export default async function AnalysisPage({ params }: { params: Promise<{ id: s
     <AppShell email={user.email ?? undefined}>
       <main className="px-4 py-10 sm:px-8">
         <div className="mx-auto w-full max-w-3xl">
-          <h1 className="sr-only">Job-match analysis</h1>
+          {/* AnalysisView carries the page's single visible h1. */}
           <AnalysisView analysis={analysis} stale={stale} evidenceText={evidenceText} />
         </div>
       </main>

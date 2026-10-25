@@ -36,6 +36,8 @@ export default function ProfileEditor() {
   const [items, setItems] = useState<ProfileItem[] | null>(null);
   const [personal, setPersonal] = useState<Personal | null>(null);
   const [loadError, setLoadError] = useState('');
+  // Polite live region: adds and deletes change the list silently otherwise.
+  const [announce, setAnnounce] = useState('');
 
   const load = useCallback(async () => {
     const [pRes, iRes] = await Promise.all([
@@ -70,6 +72,7 @@ export default function ProfileEditor() {
     const res = await fetch(`/api/profile/items/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error((await res.json().catch(() => (null)))?.error?.message ?? 'delete failed');
     await load();
+    setAnnounce('Entry deleted.');
   };
 
   const createItem = async (type: ItemType, payload: Record<string, unknown>) => {
@@ -80,6 +83,7 @@ export default function ProfileEditor() {
     });
     if (!res.ok) throw new Error((await res.json())?.error?.message ?? 'create failed');
     await load();
+    setAnnounce(`${TYPE_LABELS[type]} added.`);
   };
 
   const createSkillBatch = async (payloads: SkillDraft[]) => {
@@ -90,6 +94,7 @@ export default function ProfileEditor() {
     });
     if (!res.ok) throw new Error((await res.json().catch(() => null))?.error?.message ?? 'create failed');
     await load();
+    setAnnounce(`Skills added (${payloads.length}).`);
   };
 
   if (loadError) {
@@ -121,6 +126,7 @@ export default function ProfileEditor() {
 
   return (
     <div className="space-y-10">
+      <p role="status" className="sr-only">{announce}</p>
       <ImportCv existingItems={items} onImported={load} />
       <PersonalSection personal={personal} onSaved={load} />
 
@@ -266,7 +272,7 @@ function PersonalSection({ personal, onSaved }: { personal: Personal; onSaved: (
             {busy ? 'Saving…' : 'Save'}
           </Button>
           {saved && (
-            <span className="inline-flex items-center gap-1.5 text-sm text-tone-green">
+            <span role="status" className="inline-flex items-center gap-1.5 text-sm text-tone-green">
               <CheckCircle aria-hidden size={16} weight="fill" />
               Saved.
             </span>

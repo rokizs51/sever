@@ -7,6 +7,7 @@ import { listItems, createItem, createItems } from '@/lib/db/items';
 import { PAYLOAD_SCHEMAS, ITEM_TYPES } from '@/lib/domain/schemas';
 import { canonicalTextFor } from '@/lib/domain/canonical';
 import { fieldHint } from '@/lib/domain/validation';
+import { fieldLabelFor } from '@/components/profile/fields';
 import type { ItemType } from '@/lib/domain/types';
 
 export async function GET() {
@@ -90,7 +91,9 @@ export async function POST(request: Request) {
           {
             error: {
               code: 'invalid_payload',
-              message: isBatch ? `Entry ${i + 1}: ${fieldHint(parsed.error.issues)}` : fieldHint(parsed.error.issues),
+              message: isBatch
+                ? `Entry ${i + 1}: ${fieldHint(parsed.error.issues, fieldLabelFor(type as ItemType))}`
+                : fieldHint(parsed.error.issues, fieldLabelFor(type as ItemType)),
             },
           },
           { status: 400 }

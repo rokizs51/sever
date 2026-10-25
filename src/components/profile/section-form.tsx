@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Plus } from '@phosphor-icons/react';
 import type { ItemType } from '@/lib/domain/types';
 import { TYPE_FIELDS, TYPE_LABELS, formToPayload, type FormValues } from './fields';
@@ -24,6 +24,19 @@ export default function SectionForm({ type, onCreate }: SectionFormProps) {
   const [values, setValues] = useState<FormValues>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // Expanding swaps the Add button for the card (and back on submit/cancel);
+  // without this the keyboard focus would silently drop to the document body
+  // on every transition.
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const mounted = useRef(true);
+  useEffect(() => {
+    if (mounted.current) {
+      mounted.current = false;
+      return;
+    }
+    if (open) document.getElementById(`add-${type}-${defs[0].key}`)?.focus();
+    else btnRef.current?.focus();
+  }, [open, type, defs]);
 
   const submit = async () => {
     setError('');
@@ -42,6 +55,7 @@ export default function SectionForm({ type, onCreate }: SectionFormProps) {
   if (!open) {
     return (
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen(true)}
         className="inline-flex min-h-10 cursor-pointer items-center gap-1.5  border border-dashed border-line-2 px-4 py-2 text-sm font-medium text-mute transition-colors hover:border-line-2 hover:bg-surface-2 hover:text-ink active:scale-[0.97]"

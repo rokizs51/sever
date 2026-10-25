@@ -279,7 +279,7 @@ export default function ResumeEditor({
         )}
       </div>
 
-      <aside className="space-y-6">
+      <aside aria-label="Review and export" className="space-y-6">
         {/* Sticky so Apply/Download never hide below the fold of a long review. */}
         <Card className="sticky top-4 z-10 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -303,13 +303,15 @@ export default function ResumeEditor({
               <Chip tone="amber">spans {pageInfo.pages} pages (limit {pageInfo.limit})</Chip>
             ) : null}
             {undecided + draftCount > 0 ? (
-              <span
-                aria-disabled="true"
-                className="inline-flex items-center gap-2  bg-surface-2 px-4 py-1.5 text-sm font-medium text-faint"
+              <button
+                type="button"
+                disabled
+                title="Decide every suggestion before exporting"
+                className="inline-flex cursor-not-allowed items-center gap-2 bg-surface-2 px-4 py-1.5 text-sm font-medium text-faint"
               >
                 <Lock aria-hidden size={14} />
                 Download PDF
-              </span>
+              </button>
             ) : null}
           </div>
           <p className="mt-2 text-xs leading-5 text-mute">

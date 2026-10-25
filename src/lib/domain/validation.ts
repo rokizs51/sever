@@ -5,7 +5,17 @@
  * to strings — field paths are never symbols in practice, but the join keeps
  * the signature total.
  */
-export function fieldHint(issues: readonly { path: readonly PropertyKey[] }[]): string {
-  const names = Array.from(new Set(issues.map((i) => i.path.map(String).join('.') || 'entry')));
+export function fieldHint(
+  issues: readonly { path: readonly PropertyKey[] }[],
+  labelFor?: (key: string) => string
+): string {
+  const names = Array.from(
+    new Set(
+      issues.map(
+        (i) =>
+          i.path.map((p) => (labelFor ? labelFor(String(p)) : String(p))).join('.') || 'entry'
+      )
+    )
+  );
   return `Please check these fields: ${names.join(', ')}.`;
 }

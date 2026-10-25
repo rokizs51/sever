@@ -97,6 +97,14 @@ export function payloadToForm(defs: FieldDef[], payload: Record<string, unknown>
   return out;
 }
 
+/** Field keys → the labels users see on this screen, for server error copy
+    ("end" → "End"). Parenthetical hints are trimmed: they belong in a label
+    above a field, not mid-sentence. */
+export function fieldLabelFor(type: ItemType) {
+  return (key: string): string =>
+    TYPE_FIELDS[type]?.find((f) => f.key === key)?.label.replace(/\s*\([^)]*\)/g, '').trim() ?? key;
+}
+
 export function formToPayload(defs: FieldDef[], values: FormValues): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const def of defs) {

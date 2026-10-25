@@ -6,6 +6,7 @@ import { getItem, updateItem, deleteItem, revertText } from '@/lib/db/items';
 import { PAYLOAD_SCHEMAS } from '@/lib/domain/schemas';
 import { canonicalTextFor, normalizeManualText } from '@/lib/domain/canonical';
 import { fieldHint } from '@/lib/domain/validation';
+import { fieldLabelFor } from '@/components/profile/fields';
 import type { ProfileItem } from '@/lib/domain/types';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -75,7 +76,7 @@ export async function PATCH(
           {
             error: {
               code: 'invalid_payload',
-              message: fieldHint(parsed.error.issues),
+              message: fieldHint(parsed.error.issues, fieldLabelFor(stored.type)),
             },
           },
           { status: 400 }

@@ -110,6 +110,7 @@ export function SelectField({
     <FieldShell label={label} htmlFor={id} helper={helper} error={error} className={className}>
       <select
         id={id}
+        aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : helper ? `${id}-helper` : undefined}
         className={selectCls}
         {...rest}

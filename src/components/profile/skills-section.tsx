@@ -214,7 +214,7 @@ export default function SkillsSection({ items, onPatch, onDelete, onCreateBatch 
                 type="button"
                 aria-label={`Remove ${p.name} from the queue`}
                 onClick={() => setPending((prev) => prev.filter((_, j) => j !== i))}
-                className="-mr-1 cursor-pointer opacity-70 transition-opacity hover:opacity-100"
+                className="-mr-1.5 flex size-7 cursor-pointer items-center justify-center opacity-70 transition-opacity hover:opacity-100"
               >
                 <X aria-hidden size={12} weight="bold" />
               </button>
@@ -227,7 +227,7 @@ export default function SkillsSection({ items, onPatch, onDelete, onCreateBatch 
       )}
 
       {saved && (
-        <span className="mt-3 inline-flex items-center gap-1.5 text-sm text-tone-green">
+        <span role="status" className="mt-3 inline-flex items-center gap-1.5 text-sm text-tone-green">
           <CheckCircle aria-hidden size={16} weight="fill" />
           Saved.
         </span>

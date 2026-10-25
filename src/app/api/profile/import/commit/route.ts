@@ -8,6 +8,7 @@ import { PAYLOAD_SCHEMAS, ITEM_TYPES, PersonalInfoSchema } from '@/lib/domain/sc
 import { canonicalTextFor } from '@/lib/domain/canonical';
 import { importKey, MAX_IMPORT_ITEMS } from '@/lib/domain/cv-import';
 import { fieldHint } from '@/lib/domain/validation';
+import { fieldLabelFor } from '@/components/profile/fields';
 import type { ItemType } from '@/lib/domain/types';
 
 function fail(code: string, message: string, status: number) {
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
       const type = entry.type as ItemType;
       const parsed = PAYLOAD_SCHEMAS[type].safeParse(entry.payload);
       if (!parsed.success) {
-        return fail('invalid_payload', `Entry ${i + 1}: ${fieldHint(parsed.error.issues)}`, 400);
+        return fail('invalid_payload', `Entry ${i + 1}: ${fieldHint(parsed.error.issues, fieldLabelFor(type))}`, 400);
       }
       validated.push({
         type,

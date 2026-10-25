@@ -13,7 +13,14 @@ export default function Preview({ doc, pageLimit }: { doc: ResumeDoc; pageLimit:
   return (
     <div className="overflow-hidden  border border-line bg-surface p-2">
       <div className="h-[70vh] overflow-hidden  bg-surface-2">
-        <PDFViewer showToolbar={false} width="100%" height="100%" style={{ border: 0 }}>
+        <PDFViewer
+          showToolbar={false}
+          width="100%"
+          height="100%"
+          style={{ border: 0 }}
+          // @ts-expect-error the runtime does set the iframe title (react-pdf.browser.js:446); its prop types lag
+          title="CV preview"
+        >
           <ResumeDocument doc={doc} pageLimit={pageLimit} />
         </PDFViewer>
       </div>

@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from 'react';
+import type { ComponentPropsWithoutRef, Ref } from 'react';
 
 /**
  * Square button, one shape everywhere — the elevation language is "background
@@ -43,6 +43,8 @@ export function buttonCls(variant: Variant = 'primary', size: Size = 'md', extra
 export interface ButtonProps extends ComponentPropsWithoutRef<'button'> {
   variant?: Variant;
   size?: Size;
+  // React 19: ref arrives as a prop and rides {...rest} onto the <button>.
+  ref?: Ref<HTMLButtonElement>;
 }
 
 export function Button({
