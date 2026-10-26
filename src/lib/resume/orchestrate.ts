@@ -319,7 +319,7 @@ export async function generateResume(
   const costMicros = enhanceTokens
     ? estimateCostMicros(deps.enhanceModel, enhanceTokens)
     : 0; // as-is runs zero LLM calls — record no spend
-  await recordGeneration(supa, user.id, costMicros, now);
+  await recordGeneration(supa, costMicros);
 
   // 10. Save resume
   const fit: FitResultSnapshot = snapshotOf(fitResult);

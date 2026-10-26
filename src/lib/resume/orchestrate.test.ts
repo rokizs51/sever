@@ -706,10 +706,8 @@ describe('orchestrate.ts', () => {
       const deps = makeDeps({ supa });
       await generateResume(deps, { jdId: 'jd-1', mode: 'as_is', pageLimit: 1 });
 
-      const upd = supa.calls.from.find(
-        (c) => c.table === 'generation_quota' && c.method === 'update'
-      );
-      expect(upd?.args.llm_cost_micros).toBe(0);
+      const call = supa.calls.rpc.find((c) => c.fn === 'record_usage');
+      expect(call?.params.p_cost).toBe(0);
     });
 
     it('enhance records cost estimated from deps.enhanceModel, not a hardcoded literal', async () => {
@@ -726,13 +724,11 @@ describe('orchestrate.ts', () => {
       const deps = makeDeps({ supa });
       await generateResume(deps, { jdId: 'jd-1', mode: 'enhance', pageLimit: 1 });
 
-      const upd = supa.calls.from.find(
-        (c) => c.table === 'generation_quota' && c.method === 'update'
-      );
+      const call = supa.calls.rpc.find((c) => c.fn === 'record_usage');
       // input = 800 + ceil(33/4) = 809 (32 chars + 1 join)
       // output = 150 + 1*80 = 230
       // 809*3 + 230*15 = 2427 + 3450 = 5877
-      expect(upd?.args.llm_cost_micros).toBe(5877);
+      expect(call?.params.p_cost).toBe(5877);
     });
   });
 

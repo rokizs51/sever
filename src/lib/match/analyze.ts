@@ -242,7 +242,7 @@ export async function executeAnalysis(
       input: PROMPT_OVERHEAD_TOKENS + Math.ceil(chars / CHARS_PER_TOKEN),
       output: requirements.length * 80, // status + explanation + refs per requirement
     };
-    await recordGeneration(deps.supa, deps.userId, estimateCostMicros(deps.model, tokens), deps.now);
+    await recordGeneration(deps.supa, estimateCostMicros(deps.model, tokens));
 
     const result = normalizeAnalysis(
       output,
