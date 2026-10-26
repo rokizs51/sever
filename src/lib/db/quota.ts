@@ -52,51 +52,24 @@ export async function currentUsage(
 }
 
 /**
- * Record LLM usage for a user (upsert on user_id + month). `generations`
- * defaults to 1 for a CV generation; pass 0 for spend-only calls (CV import)
- * so they are visible to the global budget without consuming the monthly cap.
+ * Record LLM usage for the signed-in user. The record_usage RPC is the only
+ * writer of generation_quota: it takes the user from the JWT and the month
+ * from its own clock, so the table cannot be forged through PostgREST.
+ * `generations` defaults to 1 for a CV generation; pass 0 for spend-only calls
+ * (CV import) so they are visible to the global budget without consuming the
+ * monthly cap.
  */
 export async function recordGeneration(
   supa: SupabaseClient,
-  userId: string,
   costMicros: number,
-  now?: Date,
   generations = 1
 ): Promise<void> {
-  const month = monthKey(now ?? new Date());
+  const { error } = await supa.rpc('record_usage', {
+    p_cost: costMicros,
+    p_generations: generations,
+  });
 
-  const { data: existing, error: readError } = await supa
-    .from('generation_quota')
-    .select('generations, llm_cost_micros')
-    .eq('user_id', userId)
-    .eq('month', month)
-    .single();
-
-  if (readError && readError.code !== 'PGRST116') {
-    throw readError;
-  }
-
-  if (existing) {
-    const { error: updateError } = await supa
-      .from('generation_quota')
-      .update({
-        generations: (existing.generations as number) + generations,
-        llm_cost_micros: (existing.llm_cost_micros as number) + costMicros,
-      })
-      .eq('user_id', userId)
-      .eq('month', month);
-
-    if (updateError) throw updateError;
-  } else {
-    const { error: insertError } = await supa.from('generation_quota').insert({
-      user_id: userId,
-      month,
-      generations,
-      llm_cost_micros: costMicros,
-    });
-
-    if (insertError) throw insertError;
-  }
+  if (error) throw error;
 }
 
 /**

@@ -92,23 +92,30 @@ code/migration review, not live traffic or Supabase advisor data.
       move work to a job/queue or stream progress; otherwise the stuck-row
       problem repeats for generation too. Effort: **M–L**.
 
-## P3 — polish and trust
+## P3 — polish and trust (done on main, 2026-10-25)
 
-- [ ] Add privacy/terms pages: the landing makes explicit data promises and
-      there is no policy page.
-- [ ] Add `sitemap.ts`, `robots.ts`, and an OG image.
-- [ ] Improve empty-dashboard onboarding: make "Record your profile" or
+- [x] Add privacy/terms pages: the landing makes explicit data promises and
+      there is no policy page. (Drafted from codebase facts; both pages carry
+      review-before-launch comments for the contact + AI-retention lines.)
+- [x] Add `sitemap.ts`, `robots.ts`, and an OG image. (The proxy allowlist now
+      also serves `/privacy`, `/terms`, `/sitemap.xml`, `/robots.txt` and the
+      metadata image routes to anonymous crawlers.)
+- [x] Improve empty-dashboard onboarding: make "Record your profile" or
       "Import" the first action, with sample data; keep the generic wizard
-      second.
-- [ ] Assign `position` on manual item creation (every manual item is `0`
-      today, so display order is unspecified); add drag-to-reorder if profile
-      order should matter.
-- [ ] Add `created_at` to `profile_items` for audit/sort.
-- [ ] Add baseline security headers (`X-Content-Type-Options`,
+      second. (One-click sample record = the landing persona, via the normal
+      items API.)
+- [x] Assign `position` on manual item creation. (Global counter, matching
+      the import commit; drag-to-reorder deliberately not added.)
+- [x] Add `created_at` to `profile_items` for audit/sort. (Migration 0006 +
+      `listItems` tiebreaker.)
+- [x] Add baseline security headers (`X-Content-Type-Options`,
       `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`). Add a CSP
       later, after handling the landing's inline pre-paint script.
-- [ ] Run an axe/Chrome accessibility pass on the profile and resume screens.
-- [ ] Remove the Next starter SVGs from `public/`.
+- [x] Run an axe/Chrome accessibility pass on the profile and resume screens.
+      (Lighthouse a11y 100 on `/profile` and `/`; the resume editor got the
+      code-level fixes — titled iframe, real disabled button, named aside —
+      but no live audit: it needs a generated CV.)
+- [x] Remove the Next starter SVGs from `public/`.
 
 ## Suggested order
 

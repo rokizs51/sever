@@ -125,9 +125,7 @@ describe('POST /api/profile/import', () => {
     // Spend-only ledger entry: generation count must stay at 0.
     expect(mockRecordGeneration).toHaveBeenCalledWith(
       expect.anything(),
-      'user-1',
       expect.any(Number),
-      expect.any(Date),
       0
     );
   });

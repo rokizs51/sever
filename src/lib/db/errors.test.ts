@@ -27,7 +27,9 @@ function createErrorClient(error: { message: string; code: string }): SupabaseCl
     insert: () => Promise.resolve(errorResult),
   });
 
-  return { from: mockFrom } as unknown as SupabaseClient;
+  const mockRpc = () => Promise.resolve(errorResult);
+
+  return { from: mockFrom, rpc: mockRpc } as unknown as SupabaseClient;
 }
 
 describe('Repository error handling', () => {
@@ -46,9 +48,9 @@ describe('Repository error handling', () => {
       expect(result).toEqual({ generations: 0, llmCostMicros: 0 });
     });
 
-    it('recordGeneration throws on read error', async () => {
+    it('recordGeneration throws on RPC error', async () => {
       const supa = createErrorClient(dbError);
-      await expect(recordGeneration(supa, 'user-123', 1000)).rejects.toThrow('Database error');
+      await expect(recordGeneration(supa, 1000)).rejects.toThrow('Database error');
     });
   });
 

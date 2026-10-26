@@ -129,13 +129,7 @@ export async function POST(request: Request) {
         input: Math.ceil(text.length / 4) + 800,
         output: result.items.length * 120 + 300,
       };
-      await recordGeneration(
-        supabase,
-        user.id,
-        estimateCostMicros(config.extractionModel, tokens),
-        new Date(),
-        0
-      );
+      await recordGeneration(supabase, estimateCostMicros(config.extractionModel, tokens), 0);
     } catch (error) {
       console.error('CV import cost recording failed:', error);
     }

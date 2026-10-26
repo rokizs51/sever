@@ -33,20 +33,15 @@ describe('quota', () => {
   });
 
   describe('recordGeneration', () => {
-    it('records spend without consuming a generation when generations=0', async () => {
-      const supa = createSupaStub({
-        from: { generation_quota: { data: null, error: null } },
-      });
+    it('records spend through the record_usage RPC without consuming a generation', async () => {
+      const supa = createSupaStub();
 
-      await recordGeneration(supa as never, 'user-1', 42, new Date('2026-10-15T12:00:00Z'), 0);
+      await recordGeneration(supa as never, 42, 0);
 
-      const insert = supa.calls.from.find((call) => call.method === 'insert');
-      expect(insert?.args).toMatchObject({
-        user_id: 'user-1',
-        month: '2026-10',
-        generations: 0,
-        llm_cost_micros: 42,
-      });
+      expect(supa.calls.rpc).toEqual([
+        { fn: 'record_usage', params: { p_cost: 42, p_generations: 0 } },
+      ]);
+      expect(supa.calls.from).toEqual([]);
     });
   });
 });
