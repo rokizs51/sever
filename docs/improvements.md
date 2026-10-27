@@ -27,17 +27,22 @@ code/migration review, not live traffic or Supabase advisor data.
       call only exists after it is spent; the per-user atomic cap bounds what
       one burst can cost.)
 
-- [ ] **Record JD extraction spend.** `src/app/api/jds/extract/route.ts` reads
+- [x] **Record JD extraction spend.** `src/app/api/jds/extract/route.ts` reads
       `globalLlmCost` but never calls `recordGeneration`, so the budget breaker
       is blind to extraction. It also has no per-user cap and no maximum input
       length. Add a length cap and a cost-only ledger entry. Effort: **S**.
+      (Done 2026-10-27: 40k-char cap + best-effort `recordGeneration(cost, 0)`
+      mirroring the CV-import pattern. No per-user cap — extraction stays
+      bound only by the global ceiling, like import.)
 
-- [ ] **Clear stuck `running` analyses.** `executeAnalysis` fails the row on
+- [x] **Clear stuck `running` analyses.** `executeAnalysis` fails the row on
       thrown errors, but a serverless timeout kills the process before the
       `catch`. The row stays `running`; `getRunningForJd()` returns it forever
       and `rerun` answers `409 already_running`. Add a staleness sweep (treat a
       `running` row older than ~10 minutes as failed) or a DB-level timeout.
-      Effort: **S**.
+      Effort: **S**. (Done 2026-10-27: `getRunningForJd` now expires
+      running rows older than 10 minutes to `failed` before selecting —
+      a plain filter could not unblock the one_running_per_jd unique index.)
 
 - [ ] **Finish the auth surface.** No password reset (and no `/auth/callback`
       for Supabase recovery), no change-password/change-email, no verification

@@ -36,6 +36,7 @@ export interface ChainBuilder {
   insert(data: any): ChainBuilder;
   select(columns?: string): ChainBuilder;
   eq(column: string, value: any): ChainBuilder;
+  lt(column: string, value: any): ChainBuilder;
   order(column: string, opts?: { ascending?: boolean }): ChainBuilder;
   update(data: any): ChainBuilder;
   delete(): ChainBuilder;
@@ -93,6 +94,10 @@ export function createSupaStub(config: SupaStubConfig = {}): SupaStub {
         },
         eq(column: string, value: any): ChainBuilder {
           calls.from.push({ table, method: 'eq', args: { column, value } });
+          return builder;
+        },
+        lt(column: string, value: any): ChainBuilder {
+          calls.from.push({ table, method: 'lt', args: { column, value } });
           return builder;
         },
         order(column: string, opts?: { ascending?: boolean }): ChainBuilder {

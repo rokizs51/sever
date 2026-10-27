@@ -87,10 +87,35 @@ export async function getAnalysis(
   return rowToAnalysis(data as Row);
 }
 
+// A 'running' row older than this means its worker died mid-request (the
+// serverless timeout kills the process before the catch): the row would keep
+// blocking reruns through the one_running_per_jd unique index forever.
+// shortcut: 10 min assumes no live analysis legitimately runs longer;
+// revisit together with the maxDuration/job-queue work in P2.
+const RUNNING_STALE_MS = 10 * 60 * 1000;
+
+/**
+ * Return the live 'running' analysis for a JD, if any. Side effect by
+ * necessity: rows left 'running' past the staleness bound are expired to
+ * 'failed' first — a plain SELECT could not unblock the unique index that
+ * caps one running row per JD.
+ */
 export async function getRunningForJd(
   supa: SupabaseClient,
   jdId: string
 ): Promise<MatchAnalysis | null> {
+  const cutoff = new Date(Date.now() - RUNNING_STALE_MS).toISOString();
+  const { error: expireError } = await supa
+    .from('match_analyses')
+    .update({
+      status: 'failed',
+      error: 'The analysis stopped before finishing — rerun it.',
+    })
+    .eq('jd_id', jdId)
+    .eq('status', 'running')
+    .lt('updated_at', cutoff);
+  if (expireError) throw expireError;
+
   const { data, error } = await supa
     .from('match_analyses')
     .select('*')
