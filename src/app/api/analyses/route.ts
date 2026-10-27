@@ -72,6 +72,7 @@ export async function POST(request: Request) {
     }
 
     // Same quota + global-budget gates as generation, before any LLM call.
+    // Advisory early-out — executeAnalysis holds the atomic reservation.
     const usage = await currentUsage(supabase, user.id, new Date());
     if (usage.generations >= GENERATIONS_CAP) {
       return NextResponse.json(

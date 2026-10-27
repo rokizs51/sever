@@ -5,20 +5,27 @@ code/migration review, not live traffic or Supabase advisor data.
 
 ## P0 — fix before opening signup
 
-- [ ] **Lock down the generation quota table.** `generation_quota` has an
+- [x] **Lock down the generation quota table.** `generation_quota` has an
       `for all` RLS policy (`supabase/migrations/0001_init.sql`), and the
       browser holds the anon key plus the user JWT. A user can
       `PATCH /rest/v1/generation_quota` to zero their counter. The same table is
       the global cost ledger, so the budget breaker can be corrupted too.
       Make it select-only for `authenticated`; write through a
       `SECURITY DEFINER` `record_usage(p_cost, p_generations)` RPC that enforces
-      `user_id = auth.uid()`. Effort: **S–M**.
+      `user_id = auth.uid()`. Effort: **S–M**. (Done 2026-10-25, migration
+      0007.)
 
-- [ ] **Make quota and budget checks atomic.** `currentUsage()` followed later
+- [x] **Make quota and budget checks atomic.** `currentUsage()` followed later
       by `recordGeneration()` lets N concurrent `generate` requests all pass the
       50-cap and the global ceiling. Do the check and increment in one
       statement/RPC (`insert … on conflict do update … where generations < cap
-      returning`). Effort: **M**.
+      returning`). Effort: **M**. (Done 2026-10-27, migration 0008:
+      `reserve_generation()` atomically consumes a credit before any work and
+      `release_generation()` hands it back when the attempt fails before its
+      spend is recorded; generation and analysis paths both reserve. The
+      global budget ceiling stays a soft pre-read check — the true cost of a
+      call only exists after it is spent; the per-user atomic cap bounds what
+      one burst can cost.)
 
 - [ ] **Record JD extraction spend.** `src/app/api/jds/extract/route.ts` reads
       `globalLlmCost` but never calls `recordGeneration`, so the budget breaker

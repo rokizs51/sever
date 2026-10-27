@@ -58,6 +58,7 @@ export async function POST(
       );
     }
 
+    // Advisory early-out — executeAnalysis holds the atomic reservation.
     const usage = await currentUsage(supabase, user.id, new Date());
     if (usage.generations >= GENERATIONS_CAP) {
       return NextResponse.json(

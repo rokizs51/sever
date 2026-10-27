@@ -153,6 +153,11 @@ describe('POST /api/resumes/generate', () => {
       },
       rpc: {
         month_llm_cost: { data: 0, error: null },
+        // The cap is enforced by the atomic reservation (migration 0008).
+        reserve_generation: {
+          data: null,
+          error: { code: 'QT429', message: 'monthly generation cap reached' },
+        },
       },
     });
     mockCreateRouteClient.mockResolvedValue(supa as any);

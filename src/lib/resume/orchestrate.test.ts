@@ -60,7 +60,8 @@ function configureSupaForGeneration(
   profileId: string,
   items: ProfileItem[],
   jdExtraction: JdExtraction,
-  generations: number = 0
+  generations: number = 0,
+  rpc: Record<string, { data?: unknown; error?: unknown }> = {}
 ) {
   return createSupaStub({
     from: {
@@ -124,6 +125,7 @@ function configureSupaForGeneration(
         error: null,
       },
     },
+    rpc,
   });
 }
 
@@ -448,9 +450,12 @@ describe('orchestrate.ts', () => {
           canonicalText: 'Built React apps',
         }),
       ];
-      
-      // 49 generations already used, so this is the 50th
-      const supa = configureSupaForGeneration('profile-1', items, defaultExtraction, 49);
+
+      // The cap is enforced by reserve_generation in the DB (migration 0008):
+      // this call is the 50th reservation and the check+increment is atomic.
+      const supa = configureSupaForGeneration('profile-1', items, defaultExtraction, 49, {
+        reserve_generation: { data: 50, error: null },
+      });
       const deps = makeDeps({ supa });
       const input: GenerateInput = {
         jdId: 'jd-1',
@@ -460,6 +465,7 @@ describe('orchestrate.ts', () => {
 
       const result = await generateResume(deps, input);
       expect(result).toBeDefined();
+      expect(supa.calls.rpc.some((c) => c.fn === 'reserve_generation')).toBe(true);
     });
 
     it('throws QuotaExceededError on 51st generation BEFORE LLM call', async () => {
@@ -471,9 +477,14 @@ describe('orchestrate.ts', () => {
           canonicalText: 'Built React apps',
         }),
       ];
-      
-      // 50 generations already used, so this would be the 51st
-      const supa = configureSupaForGeneration('profile-1', items, defaultExtraction, 50);
+
+      // 50 generations already used: the 51st reservation hits the cap.
+      const supa = configureSupaForGeneration('profile-1', items, defaultExtraction, 50, {
+        reserve_generation: {
+          data: null,
+          error: { code: 'QT429', message: 'monthly generation cap reached' },
+        },
+      });
       const deps = makeDeps({ supa, ai });
       const input: GenerateInput = {
         jdId: 'jd-1',
@@ -482,11 +493,39 @@ describe('orchestrate.ts', () => {
       };
 
       await expect(generateResume(deps, input)).rejects.toThrow(QuotaExceededError);
-      
+
       // Fake AI calls should be empty (quota check happens before LLM)
       expect(ai.calls.extractJd.length).toBe(0);
       expect(ai.calls.enhance.length).toBe(0);
       expect(ai.calls.composeSummary.length).toBe(0);
+      // nothing was reserved, so nothing to release
+      expect(supa.calls.rpc.some((c) => c.fn === 'release_generation')).toBe(false);
+    });
+
+    it('releases the reservation when the run fails before spend is recorded', async () => {
+      const ai = makeFakeGenAI({
+        enhance: async () => {
+          throw new Error('provider down');
+        },
+      });
+      const items = [
+        makeItem({
+          id: 'item-1',
+          type: 'experience',
+          canonicalText: 'Built React apps',
+        }),
+      ];
+      const supa = configureSupaForGeneration('profile-1', items, defaultExtraction);
+      const deps = makeDeps({ supa, ai });
+
+      await expect(
+        generateResume(deps, { jdId: 'jd-1', mode: 'enhance', pageLimit: 1 })
+      ).rejects.toThrow('provider down');
+
+      const fns = supa.calls.rpc.map((c) => c.fn);
+      expect(fns).toContain('reserve_generation');
+      expect(fns).toContain('release_generation');
+      expect(fns).not.toContain('record_usage');
     });
   });
 
@@ -708,6 +747,7 @@ describe('orchestrate.ts', () => {
 
       const call = supa.calls.rpc.find((c) => c.fn === 'record_usage');
       expect(call?.params.p_cost).toBe(0);
+      expect(call?.params.p_generations).toBe(0); // the credit came from the reserve
     });
 
     it('enhance records cost estimated from deps.enhanceModel, not a hardcoded literal', async () => {

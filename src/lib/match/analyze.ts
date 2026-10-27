@@ -9,7 +9,7 @@ import {
   type MatchAnalysis,
 } from '@/lib/db/analyses';
 import type { JobDescription } from '@/lib/db/jds';
-import { recordGeneration } from '@/lib/db/quota';
+import { recordGeneration, reserveGeneration, releaseGeneration } from '@/lib/db/quota';
 import {
   MatchAnalysisResultSchema,
   type MatchAnalysisModelOutput,
@@ -216,9 +216,12 @@ const ANALYSIS_FAIL_MESSAGE =
 
 /**
  * Run one analysis to completion for an already-created 'running' row:
- * LLM call → spend recorded (money spent is money counted, same discipline
- * as generateResume) → deterministic validation → completed, or failed with
- * a sanitized message. Never a partial result dressed as completed.
+ * reserve a generation credit (the caller's currentUsage pre-check is
+ * advisory; this is the atomic cap gate, migration 0008) → LLM call → spend
+ * recorded against the reserved credit (money spent is money counted, same
+ * discipline as generateResume) → deterministic validation → completed, or
+ * failed with a sanitized message and the reservation released. Never a
+ * partial result dressed as completed.
  */
 export async function executeAnalysis(
   deps: { supa: SupabaseClient; ai: GenAI; userId: string; now: Date; model: string },
@@ -232,6 +235,13 @@ export async function executeAnalysis(
   const evidenceItems = items.filter((i) => i.type !== 'career_snapshot');
   const itemInputs = evidenceItems.map((i) => ({ itemId: i.id, type: i.type, text: i.canonicalText }));
 
+  if (!(await reserveGeneration(deps.supa))) {
+    const message = 'Monthly generation quota exceeded — rerun after the cap resets.';
+    await failAnalysis(deps.supa, analysis.id, message);
+    return { ...analysis, status: 'failed', result: null, error: message };
+  }
+
+  let recorded = false;
   try {
     const output = await deps.ai.analyzeMatch({ requirements, items: itemInputs });
 
@@ -242,7 +252,8 @@ export async function executeAnalysis(
       input: PROMPT_OVERHEAD_TOKENS + Math.ceil(chars / CHARS_PER_TOKEN),
       output: requirements.length * 80, // status + explanation + refs per requirement
     };
-    await recordGeneration(deps.supa, estimateCostMicros(deps.model, tokens));
+    await recordGeneration(deps.supa, estimateCostMicros(deps.model, tokens), 0); // credit from the reserve
+    recorded = true;
 
     const result = normalizeAnalysis(
       output,
@@ -252,6 +263,7 @@ export async function executeAnalysis(
     await completeAnalysis(deps.supa, analysis.id, result);
     return { ...analysis, status: 'completed', result, error: null };
   } catch (error) {
+    if (!recorded) await releaseGeneration(deps.supa);
     console.error('Match analysis error:', error);
     await failAnalysis(deps.supa, analysis.id, ANALYSIS_FAIL_MESSAGE);
     return { ...analysis, status: 'failed', result: null, error: ANALYSIS_FAIL_MESSAGE };

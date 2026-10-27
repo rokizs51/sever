@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { monthKey, GENERATIONS_CAP, recordGeneration } from './quota';
+import {
+  monthKey,
+  GENERATIONS_CAP,
+  recordGeneration,
+  reserveGeneration,
+  releaseGeneration,
+} from './quota';
 import { createSupaStub } from '@/test-helpers/supa-stub';
 
 describe('quota', () => {
@@ -42,6 +48,54 @@ describe('quota', () => {
         { fn: 'record_usage', params: { p_cost: 42, p_generations: 0 } },
       ]);
       expect(supa.calls.from).toEqual([]);
+    });
+  });
+
+  describe('reserveGeneration', () => {
+    it('returns true when the reservation succeeds', async () => {
+      const supa = createSupaStub({ rpc: { reserve_generation: { data: 50, error: null } } });
+
+      await expect(reserveGeneration(supa as never)).resolves.toBe(true);
+      expect(supa.calls.rpc).toEqual([{ fn: 'reserve_generation', params: undefined }]);
+    });
+
+    it('maps the QT429 cap error to false, not an exception', async () => {
+      const supa = createSupaStub({
+        rpc: {
+          reserve_generation: {
+            data: null,
+            error: { code: 'QT429', message: 'monthly generation cap reached' },
+          },
+        },
+      });
+
+      await expect(reserveGeneration(supa as never)).resolves.toBe(false);
+    });
+
+    it('rethrows other RPC errors', async () => {
+      const supa = createSupaStub({
+        rpc: { reserve_generation: { data: null, error: { code: 'DB_ERROR', message: 'Database error' } } },
+      });
+
+      await expect(reserveGeneration(supa as never)).rejects.toThrow('Database error');
+    });
+  });
+
+  describe('releaseGeneration', () => {
+    it('calls the RPC', async () => {
+      const supa = createSupaStub();
+
+      await releaseGeneration(supa as never);
+
+      expect(supa.calls.rpc).toEqual([{ fn: 'release_generation', params: undefined }]);
+    });
+
+    it('never throws — it runs on failure paths', async () => {
+      const supa = createSupaStub({
+        rpc: { release_generation: { data: null, error: { code: 'DB_ERROR', message: 'Database error' } } },
+      });
+
+      await expect(releaseGeneration(supa as never)).resolves.toBeUndefined();
     });
   });
 });

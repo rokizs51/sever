@@ -5,6 +5,8 @@ export interface QuotaUsage {
   llmCostMicros: number;
 }
 
+// Enforcement lives in reserve_generation() (migration 0008), which hardcodes
+// the same number; this copy serves display and the advisory pre-checks.
 export const GENERATIONS_CAP = 50;
 
 /**
@@ -70,6 +72,37 @@ export async function recordGeneration(
   });
 
   if (error) throw error;
+}
+
+// errcode raised by reserve_generation() when the cap is reached (migration 0008).
+const RESERVE_CAP_REACHED = 'QT429';
+
+/**
+ * Atomically reserve one generation credit: the cap check and the increment
+ * are a single locked statement (migration 0008), so concurrent requests
+ * cannot all pass the last credit the way read-then-record did. Returns false
+ * when the cap is reached. Callers that then fail before recording their
+ * spend must pair with releaseGeneration() — together they keep the old
+ * accounting: success costs one generation, failure costs nothing.
+ */
+export async function reserveGeneration(supa: SupabaseClient): Promise<boolean> {
+  const { error } = await supa.rpc('reserve_generation');
+  if (error) {
+    if (error.code === RESERVE_CAP_REACHED) return false;
+    throw error;
+  }
+  return true;
+}
+
+/**
+ * Best-effort undo of a reservation. Never throws — it runs on failure paths
+ * and must not mask the original error.
+ */
+export async function releaseGeneration(supa: SupabaseClient): Promise<void> {
+  const { error } = await supa.rpc('release_generation');
+  if (error) {
+    console.error('release_generation failed:', error.message);
+  }
 }
 
 /**
