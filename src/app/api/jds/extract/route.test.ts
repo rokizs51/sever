@@ -22,18 +22,28 @@ vi.mock('@/lib/ai/client', () => ({
 
 vi.mock('@/lib/ai/env', () => ({
   aiConfig: vi.fn(),
+  estimateCostMicros: vi.fn(() => 100),
 }));
+
+// Keep the real quota helpers (globalLlmCost/monthKey run against the stub);
+// spy on the ledger write.
+vi.mock('@/lib/db/quota', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/db/quota')>();
+  return { ...actual, recordGeneration: vi.fn() };
+});
 
 import { POST } from './route';
 import { getSessionUser } from '@/lib/auth/session';
 import { createRouteClient } from '@/lib/db/client';
 import { createGenAI } from '@/lib/ai/client';
 import { aiConfig } from '@/lib/ai/env';
+import { recordGeneration } from '@/lib/db/quota';
 
 const mockGetSessionUser = vi.mocked(getSessionUser);
 const mockCreateRouteClient = vi.mocked(createRouteClient);
 const mockCreateGenAI = vi.mocked(createGenAI);
 const mockAiConfig = vi.mocked(aiConfig);
+const mockRecordGeneration = vi.mocked(recordGeneration);
 
 describe('POST /api/jds/extract', () => {
   beforeEach(() => {
@@ -204,6 +214,19 @@ describe('POST /api/jds/extract', () => {
     expect(data.extraction.requiredSkills).toContain('TypeScript');
     expect(fakeGenAI.calls.extractJd).toHaveLength(1);
     expect(supa.calls.from.length).toBeGreaterThan(0);
+    // spend-only ledger entry: cost recorded, no generation consumed (P0-3)
+    expect(mockRecordGeneration).toHaveBeenCalledWith(supa, 100, 0);
+  });
+
+  it('returns 400 too_long when raw exceeds the character cap', async () => {
+    mockGetSessionUser.mockResolvedValue({ id: 'user-1', email: 'test@example.com' });
+
+    const response = await POST(createRequest({ raw: 'A'.repeat(40_001) }));
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error.code).toBe('too_long');
+    expect(mockRecordGeneration).not.toHaveBeenCalled();
   });
 
   // Review Focus 2: junk inputs produce typed 400

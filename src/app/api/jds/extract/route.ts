@@ -3,10 +3,13 @@ import { cookies } from 'next/headers';
 import { createRouteClient } from '@/lib/db/client';
 import { getSessionUser } from '@/lib/auth/session';
 import { createGenAI } from '@/lib/ai/client';
-import { aiConfig } from '@/lib/ai/env';
+import { aiConfig, estimateCostMicros } from '@/lib/ai/env';
 import { JdNotParseableError } from '@/lib/ai/types';
 import { createJd } from '@/lib/db/jds';
-import { globalLlmCost, monthKey } from '@/lib/db/quota';
+import { globalLlmCost, monthKey, recordGeneration } from '@/lib/db/quota';
+
+// Same ceiling as the CV import (profile/import/route.ts): one LLM pass.
+const MAX_JD_CHARS = 40_000;
 
 export async function POST(request: Request) {
   try {
@@ -42,6 +45,12 @@ export async function POST(request: Request) {
     if (raw.trim().length < 80) {
       return NextResponse.json(
         { error: { code: 'too_short', message: 'Job description text must be at least 80 characters' } },
+        { status: 400 }
+      );
+    }
+    if (raw.length > MAX_JD_CHARS) {
+      return NextResponse.json(
+        { error: { code: 'too_long', message: 'That job description is too long to read in one pass. Paste only the job post.' } },
         { status: 400 }
       );
     }
@@ -81,7 +90,21 @@ export async function POST(request: Request) {
       throw error;
     }
 
-    // 5. Persist
+    // 5. Spend-only ledger entry so extraction reaches the global budget
+    // breaker without consuming a generation. Best-effort, and recorded
+    // before persistence: money spent is money counted — a ledger failure
+    // must not throw away an extraction the user already paid for.
+    try {
+      const tokens = {
+        input: Math.ceil(raw.length / 4) + 800,
+        output: Math.ceil(JSON.stringify(extraction).length / 4),
+      };
+      await recordGeneration(supabase, estimateCostMicros(config.extractionModel, tokens), 0);
+    } catch (error) {
+      console.error('JD extraction cost recording failed:', error);
+    }
+
+    // 6. Persist
     const jd = await createJd(supabase, user.id, raw, extraction);
 
     // 6. Success
