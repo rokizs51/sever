@@ -98,6 +98,7 @@ export default function Sheet() {
   return (
     <div
       data-ui
+      role="region"
       aria-label={`Your CV sheet, ${stage} stage`}
       className="w-[min(520px,100%)] bg-surface px-8 py-7 text-ink"
     >
@@ -110,9 +111,9 @@ export default function Sheet() {
         </p>
         <p className="mt-2 text-[22px] font-semibold leading-none">Alex Moreau</p>
         <p className="mt-1 text-[15px] font-medium">{r.title}</p>
-        <p className="mt-1 text-[13px] text-mute">
-          Berlin · alex.moreau@mail.dev · +49 · 6 yrs
-        </p>
+        {/* Two short bylines, one dot each: a document header, not a meta string. */}
+        <p className="mt-1 text-[13px] text-mute">Berlin · +49</p>
+        <p className="text-[13px] text-mute">alex.moreau@mail.dev · 6 yrs</p>
 
         {stage === 'record' || stage === 'paste' ? (
           <section className="mt-5">

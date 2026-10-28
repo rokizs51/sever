@@ -13,15 +13,15 @@ export type Bullet = {
 };
 
 export const RECORD: Bullet[] = [
-  { id: 'designsystem', text: 'Led the design-system rebuild across 4 product teams (React, TypeScript)', company: 'Meridian Health', period: '2022–present', tags: ['React', 'TypeScript', 'design systems'] },
-  { id: 'wcag', text: 'Shipped WCAG 2.2 AA on the patient portal', company: 'Meridian Health', period: '2022–present', tags: ['accessibility', 'WCAG'] },
-  { id: 'figma', text: 'Kept the Figma library in lockstep with code via Storybook', company: 'Meridian Health', period: '2022–present', tags: ['Figma', 'Storybook'] },
-  { id: 'mentor', text: 'Mentored 3 junior developers through onboarding', company: 'Meridian Health', period: '2022–present', tags: [] },
-  { id: 'graphql', text: 'Migrated the checkout API to GraphQL, −38% latency', company: 'Northline Studio', period: '2019–2022', tags: ['GraphQL'] },
-  { id: 'k8s', text: 'Containerised 9 services on Kubernetes; cut build minutes 40%', company: 'Northline Studio', period: '2019–2022', tags: ['Kubernetes'] },
-  { id: 'motion', text: 'Built the marketing site’s motion layer (GSAP, reduced-motion first)', company: 'Northline Studio', period: '2019–2022', tags: ['GSAP'] },
-  { id: 'inventory', text: 'Ran quarterly hardware inventory audits', company: 'Northline Studio', period: '2019–2022', tags: [] },
-  { id: 'payments', text: 'Rebuilt checkout retries, +2.1% completed payments', company: 'Freelance', period: '2018–2019', tags: [] },
+  { id: 'designsystem', text: 'Led the design-system rebuild across 4 product teams (React, TypeScript)', company: 'Meridian Health', period: 'since 2022', tags: ['React', 'TypeScript', 'design systems'] },
+  { id: 'wcag', text: 'Shipped WCAG 2.2 AA on the patient portal', company: 'Meridian Health', period: 'since 2022', tags: ['accessibility', 'WCAG'] },
+  { id: 'figma', text: 'Kept the Figma library in lockstep with code via Storybook', company: 'Meridian Health', period: 'since 2022', tags: ['Figma', 'Storybook'] },
+  { id: 'mentor', text: 'Mentored 3 junior developers through onboarding', company: 'Meridian Health', period: 'since 2022', tags: [] },
+  { id: 'graphql', text: 'Migrated the checkout API to GraphQL, −38% latency', company: 'Northline Studio', period: '2019 to 2022', tags: ['GraphQL'] },
+  { id: 'k8s', text: 'Containerised 9 services on Kubernetes; cut build minutes 40%', company: 'Northline Studio', period: '2019 to 2022', tags: ['Kubernetes'] },
+  { id: 'motion', text: 'Built the marketing site’s motion layer (GSAP, reduced-motion first)', company: 'Northline Studio', period: '2019 to 2022', tags: ['GSAP'] },
+  { id: 'inventory', text: 'Ran quarterly hardware inventory audits', company: 'Northline Studio', period: '2019 to 2022', tags: [] },
+  { id: 'payments', text: 'Rebuilt checkout retries, +2.1% completed payments', company: 'Freelance', period: '2018 to 2019', tags: [] },
 ];
 
 /** The one enhancement the product proposes for this record (review stage). */

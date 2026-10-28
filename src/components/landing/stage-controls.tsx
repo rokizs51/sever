@@ -12,7 +12,8 @@ export function StageClause() {
   const c = CLAUSES[stage];
   return (
     <div key={stage} className="sheet-in">
-      <p className="text-clause font-semibold leading-[1.06] tracking-tight">{c.line}</p>
+      {/* h2, not p: the stage is the section's heading in the document outline. */}
+      <h2 className="text-clause font-semibold leading-[1.06] tracking-tight">{c.line}</h2>
       <p className="mt-3 max-w-[46ch] text-body leading-relaxed text-ink">{c.body}</p>
     </div>
   );
@@ -34,7 +35,8 @@ export function StageSlider() {
         onChange={(e) => setStage(STAGES[Number(e.target.value)])}
         className="stage-range"
       />
-      <ol className="-mt-1 flex justify-between gap-2">
+      {/* 44px targets; a 320px phone gets a 2×2 grid instead of wrapped labels. */}
+      <ol className="-mt-1 flex justify-between gap-2 max-sm:grid max-sm:grid-cols-2">
         {STAGES.map((s, i) => (
           <li key={s}>
             <button
@@ -42,7 +44,7 @@ export function StageSlider() {
               aria-current={i === idx ? 'step' : undefined}
               onClick={() => setStage(s)}
               className={
-                'py-2 text-note transition-colors ' +
+                'flex min-h-11 items-center whitespace-nowrap text-note transition-colors ' +
                 (i === idx ? 'font-semibold text-ink' : 'text-mute hover:text-ink')
               }
             >
@@ -67,7 +69,7 @@ export function RoleIndex({ roles }: { roles: { id: RoleId; label: string }[] })
             aria-current={id === role ? 'true' : undefined}
             onClick={() => pickRole(id)}
             className={
-              'block w-full py-1.5 text-left text-clause leading-[1.08] tracking-tight transition-colors ' +
+              'flex min-h-11 w-full items-center text-left text-clause leading-[1.08] tracking-tight transition-colors sm:min-h-13 ' +
               (id === role ? 'font-semibold text-ink' : 'font-medium text-mute hover:text-ink')
             }
           >
@@ -115,7 +117,7 @@ export function CtaPaste() {
         onChange={(e) => setRaw(e.target.value)}
         rows={6}
         placeholder="Senior engineer wanted. You will…"
-        className="mt-3 w-full resize-y border border-line-2 bg-surface px-4 py-3 text-sm text-ink placeholder:text-faint transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+        className="mt-3 w-full resize-y border border-mute bg-surface px-4 py-3 text-sm text-ink placeholder:text-faint transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
       />
       <button type="submit" className={buttonCls('primary', 'lg', 'mt-4 w-full')}>
         Create account

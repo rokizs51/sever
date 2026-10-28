@@ -40,7 +40,7 @@ export default async function HomePage() {
           <Wordmark className="text-xl" />
           <nav aria-label="Public" className="flex items-center gap-6">
             {user ? (
-              <Link href="/dashboard" className={buttonCls('primary', 'md')}>
+              <Link href="/dashboard" className={buttonCls('primary', 'lg')}>
                 Dashboard
               </Link>
             ) : (
@@ -48,7 +48,7 @@ export default async function HomePage() {
                 <Link href="/login" className="text-sm text-ink underline-offset-4 transition-colors hover:underline">
                   Sign in
                 </Link>
-                <Link href="/signup" className={buttonCls('primary', 'md')}>
+                <Link href="/signup" className={buttonCls('primary', 'lg')}>
                   Create account
                 </Link>
               </>
@@ -59,16 +59,21 @@ export default async function HomePage() {
         <div className="mx-auto grid w-full max-w-[1440px] lg:grid-cols-[minmax(0,44%)_minmax(0,56%)]">
           {/* ---- Reading column ---- */}
           <div className="min-w-0">
-            {/* Hero */}
-            <section data-stage="tailor" className="px-6 pb-16 pt-10 lg:pt-20">
+            {/* Hero: fills its own screen (Stage posture, layout.md § 6). */}
+            {/* The column rests at the base of its screen: head high, the
+                action and its terms at the fold, air between (44a/79). */}
+            <section
+              data-stage="tailor"
+              className="flex flex-col px-6 pt-16 pb-10 lg:h-[calc(100svh-5.5rem)] lg:pt-[12svh] lg:pb-[15svh]"
+            >
               <h1 className="reveal max-w-[12ch] text-display font-semibold leading-[0.98] tracking-[-0.03em]">
                 Record once. <span className="block">Tailor forever.</span>
               </h1>
               <p className="reveal mt-6 max-w-[46ch] text-lead leading-snug">
-                Paste a job description and Sever reorders your CV into one
-                clean, ATS-readable page, built only from what you recorded.
+                Paste a job description. One clean, ATS-readable page from what
+                you recorded.
               </p>
-              <div className="reveal mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <div className="reveal mt-12 flex flex-wrap items-center gap-x-6 gap-y-3 lg:mt-auto">
                 <Link href="/signup" className={buttonCls('primary', 'lg')}>
                   Create account
                 </Link>
@@ -76,18 +81,19 @@ export default async function HomePage() {
                   Already have one? Sign in
                 </Link>
               </div>
-              <p className="reveal mt-8 text-sm text-mute">
+              <p className="reveal mt-8 max-w-[46ch] text-sm text-mute">
                 Private by default. Your story is never sold, shared, or used to train anything.
               </p>
-              {/* Mobile: the sheet sits right under the claim. */}
-              <div className="reveal mt-10 flex justify-center bg-surface-2 px-4 py-6 lg:hidden">
+              {/* Mobile: the sheet sits right under the claim. Never reveal-
+                  gated: it is the product's own output, it shows immediately. */}
+              <div className="mt-10 flex justify-center bg-surface-2 px-4 py-6 lg:hidden">
                 <Sheet />
               </div>
             </section>
 
             {/* Proof: what one record actually holds */}
             <section data-stage="record" className="border-t-4 border-ink/90 bg-surface px-6 py-16 lg:py-24">
-              <h2 className="reveal text-clause font-semibold leading-[1.06] tracking-tight">
+              <h2 className="reveal text-balance text-clause font-semibold leading-[1.06] tracking-tight">
                 Everything on the page is already yours.
               </h2>
               <p className="reveal mt-4 max-w-[46ch]">
@@ -95,20 +101,9 @@ export default async function HomePage() {
                 nine lines over six years, three employers. The CV can only say
                 what these prove, which is why it never has to lie.
               </p>
-              <div className="reveal mt-8 grid gap-6 sm:grid-cols-2">
-                <figure>
-                  <img
-                    src="/landing/first-letter-on-a-typewriter-1829.jpg"
-                    width={1274}
-                    height={982}
-                    alt="The first letter written on a typing machine, addressed to Martin Van Buren, Detroit, 1829"
-                    loading="lazy"
-                    className="h-auto w-full object-cover"
-                  />
-                  <figcaption className="mt-2 text-sm text-mute">
-                    Detroit, 1829: the first letter set down on a machine. One pass, permanent.
-                  </figcaption>
-                </figure>
+              {/* Asymmetric pair: the moving record leads, the 1829 first
+                  stroke annotates it. */}
+              <div className="reveal mt-10 grid gap-8 sm:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] sm:items-end">
                 <figure>
                   <video
                     src="/landing/olivetti-dora-portable-typewriter.webm"
@@ -120,33 +115,52 @@ export default async function HomePage() {
                     loop
                     playsInline
                     aria-label="A hand typing on a 1960s Olivetti Dora portable typewriter"
-                    className="h-auto w-full object-cover bg-surface-2"
+                    className="h-auto w-full bg-surface-2"
                   />
                   <figcaption className="mt-2 text-sm text-mute">
                     Recording, 1960s: each keystroke lands once and stays.
                   </figcaption>
                 </figure>
+                <figure className="max-sm:order-first">
+                  <img
+                    src="/landing/first-letter-on-a-typewriter-1829.jpg"
+                    width={1274}
+                    height={982}
+                    alt="The first letter written on a typing machine, addressed to Martin Van Buren, Detroit, 1829"
+                    loading="lazy"
+                    className="h-auto w-full"
+                  />
+                  <figcaption className="mt-2 text-sm text-mute">
+                    Detroit, 1829: the first letter set down on a machine. One pass, permanent.
+                  </figcaption>
+                </figure>
               </div>
-              <div className="reveal mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-3">
-                <div>
-                  <p className="mb-3 text-mute">Employers</p>
-                  <p className="mb-2.5 leading-snug">Meridian Health · 2022–present</p>
-                  <p className="mb-2.5 leading-snug">Northline Studio · 2019–2022</p>
-                  <p className="mb-2.5 leading-snug">Freelance · 2018–2019</p>
+              {/* The record as a ledger: rows parted by hairlines, name
+                  heavier than date, skills flowing rather than columned. */}
+              <dl className="reveal mt-12 border-y border-line">
+                <div className="flex items-baseline justify-between gap-6 border-b border-line py-3">
+                  <dt className="text-body">Meridian Health</dt>
+                  <dd className="text-sm text-mute">since 2022</dd>
                 </div>
-                <div>
-                  <p className="mb-3 text-mute">Skills</p>
-                  {SKILLS.map((s) => (
-                    <p key={s} className="mb-2.5 leading-snug">
-                      {s}
-                    </p>
-                  ))}
+                <div className="flex items-baseline justify-between gap-6 border-b border-line py-3">
+                  <dt className="text-body">Northline Studio</dt>
+                  <dd className="text-sm text-mute">2019 to 2022</dd>
                 </div>
-                <div>
-                  <p className="mb-3 text-mute">Education</p>
-                  <p className="mb-2.5 leading-snug">BSc Computer Science, Technical University Berlin</p>
+                <div className="flex items-baseline justify-between gap-6 border-b border-line py-3">
+                  <dt className="text-body">Freelance</dt>
+                  <dd className="text-sm text-mute">2018 to 2019</dd>
                 </div>
-              </div>
+                <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-line py-3">
+                  <dt className="text-body">Skills</dt>
+                  <dd className="max-w-[46ch] text-sm leading-6 text-mute">
+                    {SKILLS.join(', ')}
+                  </dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-6 py-3">
+                  <dt className="text-body">Education</dt>
+                  <dd className="text-sm text-mute">BSc Computer Science, Technical University Berlin</dd>
+                </div>
+              </dl>
             </section>
 
             {/* How it works, stage by stage */}
@@ -186,7 +200,7 @@ export default async function HomePage() {
                 className="h-[36svh] w-full object-cover"
               />
               <div className="px-6 py-16 lg:py-24">
-              <h2 className="reveal text-clause font-semibold leading-[1.06] tracking-tight">
+              <h2 className="reveal text-balance text-clause font-semibold leading-[1.06] tracking-tight">
                 One record. A different paper for every posting.
               </h2>
               <p className="reveal mt-4 max-w-[46ch]">
@@ -202,7 +216,7 @@ export default async function HomePage() {
 
           {/* ---- Desktop stage: the sheet, always in the room ---- */}
           <aside aria-label="Live CV preview" className="hidden lg:block">
-            <div className="sticky top-0 flex h-svh justify-center overflow-hidden bg-surface-2 pt-[max(6svh,48px)]">
+            <div className="sticky top-0 flex h-svh items-center justify-center overflow-hidden bg-surface-2 px-6">
               <Sheet />
             </div>
           </aside>

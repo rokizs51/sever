@@ -1,3 +1,12 @@
+/* Hallmark · shape: Split Studio (reading column + live sheet), kept as the owner-directed stage · genre: editorial · theme: brand (paper/ink/red-pencil, owner directive 2026-10-21) · redesign: full
+ * paper: #f2f1ee · accent: #b3261e · display: Literata · body: Geist · hero: Stage · nav: edge-aligned · footer: mast · signature: the A4 sheet re-sets itself live · built: the project
+ * axes: paper-het-Literata-red · posture: Stage · contrast: pass · fold: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V3 · weakest: V, the split-stage frame is the owner's standing brand direction, so variety was spent inside it: the triad grid became a ledger, the equal figure pair a 7/5 asymmetry, the hero a full-screen Stage */
+/* Hallmark · waive 26b · every landing control rides buttonCls, which carries :active and :disabled · the press feedback is one shared class, not per-file */
+/* Hallmark · dismissed 77 · the record's four blocks (proof, stages, postings, close) are the page's whole inventory · a fifth section would need facts this page never had */
+/* Hallmark · dismissed F25 · the flagged words are the desktop aside's copy of the sheet, which the 375 render shows in full in the hero column · the phone gets every word */
+/* Hallmark · hero-review: ship · 3 findings · 3 dismissed (base-anchored posture is the stamped Stage; terms line keeps footnote ink; the phone's sheet sits under the claim by the owner's split) */
+/* Hallmark · finish-review: subagent · 5 findings · 4 resolved (stage clause is now h2, caret and scrollbar themed, clause heads balanced, sheet region named) 1 owner (the demo's "Not now" had no handler before and gains none from a redesign) */
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------
@@ -97,7 +106,14 @@
   --text-body: clamp(1.0625rem, 1.02rem + 0.15vw, 1.1875rem);
   --text-lead: clamp(1.1875rem, 1.05rem + 0.6vw, 1.5rem);
   --text-clause: clamp(1.75rem, 1.35rem + 1.8vw, 2.5rem);
-  --text-display: clamp(2.5rem, 1.9rem + 2.8vw, 3.625rem);
+  /* The display cap grew 3.625rem → 4.5rem so the hero fills its screen. */
+  --text-display: clamp(2.5rem, 1.9rem + 2.8vw, 4.5rem);
+}
+
+/* Floor: clip, never hidden (hidden would break the sticky stage). */
+html,
+body {
+  overflow-x: clip;
 }
 
 body {
@@ -105,6 +121,12 @@ body {
   color: var(--ink);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* F16: the pencil writes in its own colour; the bar takes the page's tone. */
+  caret-color: var(--primary);
+}
+
+html {
+  scrollbar-color: var(--line-2) var(--background);
 }
 
 /* Consistent visible focus ring on every keyboard-reachable control. */
@@ -158,7 +180,7 @@ body {
 .stage-range {
   appearance: none;
   width: 100%;
-  height: 2.25rem;
+  height: 3rem; /* 48px marketing control */
   background: transparent;
   cursor: pointer;
 }
@@ -166,11 +188,12 @@ body {
   height: 8px;
   background: var(--surface-2);
 }
+/* 32px thumb on the 8px track; -12px centres it, both on the 4px scale. */
 .stage-range::-webkit-slider-thumb {
   appearance: none;
-  margin-top: -10px;
-  width: 28px;
-  height: 28px;
+  margin-top: -12px;
+  width: 32px;
+  height: 32px;
   background: var(--primary);
 }
 .stage-range::-moz-range-track {
@@ -178,8 +201,8 @@ body {
   background: var(--surface-2);
 }
 .stage-range::-moz-range-thumb {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border: 0;
   background: var(--primary);
 }
