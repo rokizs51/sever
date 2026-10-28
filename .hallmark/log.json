@@ -1,0 +1,31 @@
+[
+ {
+  "mode": "redesign",
+  "depth": "full",
+  "scope": "page",
+  "shape": "Split Studio",
+  "theme": "brand (paper/ink/red-pencil, owner directive 2026-10-21)",
+  "genre": "editorial",
+  "axes": "Hanging|Two-column asymmetric|Bleed-colour block|Solid|Full-bleed|Fade-up stagger",
+  "fingerprint": "Hanging|Two-column asymmetric|Bleed-colour block|Solid|Full-bleed|Fade-up stagger",
+  "hero": "Stage (column rests at base: head high, action at fold)",
+  "nav": "edge-aligned",
+  "footer": "mast",
+  "imagery": "photographs 4, local public/landing (carried) + product built live (A4 sheet)",
+  "photos": [
+   "first-letter-on-a-typewriter-1829.jpg",
+   "olivetti-dora-portable-typewriter.webm",
+   "dr-stowe-ad.png",
+   "letter-of-resignation-in-old-typewriter.jpg"
+  ],
+  "sections": "Hero Stage (live sheet re-set) | Record proof (asymmetric figures 7/5 + hairline ledger dl) | Stages (clause + slider, scroll-driven) | Showcase (full-bleed banner + role index) | Close (red band, paste-first CTA) | Mast footer",
+  "signature": "the A4 sheet re-sets itself live (kept, owner-directed)",
+  "waived": [
+   "26b (buttonCls carries :active/:disabled)",
+   "F25 dismissed (desktop aside duplicate; phone gets the sheet in-hero)",
+   "77 dismissed (four blocks are the whole content inventory)"
+  ],
+  "prompt": "redesign the home page (/ landing) with the current color scene, not like AI slop, even better",
+  "date": "2026-10-28"
+ }
+]
