@@ -1,0 +1,3 @@
+# Windows clones with core.autocrlf=true got CRLF in seed.sql and
+# seed.test.ts failed on invisible \r; tests read fixtures via fs.
+* text=auto eol=lf
