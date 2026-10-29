@@ -31,9 +31,9 @@ that speaks it, e.g. Qwen) · `unpdf` for reading uploaded PDFs ·
 
 ## Setup
 
-1. Install dependencies: `npm install`
+1. Install dependencies: `pnpm install`
 2. Create a Supabase project, then apply the migrations in `supabase/migrations/`
-   (in order — `0001_init.sql` … `0005_item_certifications.sql`) via the
+   (in order — `0001_init.sql` … `0008_quota_reservation.sql`) via the
    dashboard SQL editor or `supabase db push`.
    Optional: run `supabase/seed.sql` the same way to create a test account —
    `seed.midlevel@example.com` / `SeedPass123!`, a full mid-level software
@@ -42,17 +42,17 @@ that speaks it, e.g. Qwen) · `unpdf` for reading uploaded PDFs ·
    key (dashboard → Project Settings → API Keys) plus your AI endpoint base
    URL, key, and model ids. The comments in `.env.example` cover the gotchas
    (e.g. the base URL must end at `/v1`).
-4. `npm run dev` → http://localhost:3000
+4. `pnpm dev` → http://localhost:3000
 
 ## Commands
 
-| Command             | What it does                  |
-| ------------------- | ----------------------------- |
-| `npm run dev`       | Development server            |
-| `npm run build`     | Production build              |
-| `npm test`          | Vitest, full suite            |
-| `npm run test:watch`| Vitest, watch mode            |
-| `npm run lint`      | ESLint                        |
+| Command              | What it does                  |
+| -------------------- | ----------------------------- |
+| `pnpm dev`           | Development server            |
+| `pnpm build`         | Production build              |
+| `pnpm test`          | Vitest, full suite            |
+| `pnpm test:watch`    | Vitest, watch mode            |
+| `pnpm lint`          | ESLint                        |
 
 ## Where things live
 
