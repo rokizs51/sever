@@ -114,10 +114,18 @@ describe('ItemEditor', () => {
     );
   });
 
-  it('delete button calls onDelete when provided', async () => {
+  it('delete asks for an inline confirm; Cancel aborts, confirm calls onDelete', async () => {
     const onDelete = vi.fn().mockResolvedValue(undefined);
     render(<ItemEditor item={makeItem()} onPatch={vi.fn()} onDelete={onDelete} />);
 
+    fireEvent.click(screen.getByRole('button', { name: /delete/i }));
+    expect(onDelete).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
+    expect(onDelete).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /delete/i }));
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
     await waitFor(() => expect(onDelete).toHaveBeenCalledTimes(1));
   });

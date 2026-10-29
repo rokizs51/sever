@@ -26,6 +26,7 @@ export default function ItemEditor({ item, onPatch, onDelete }: ItemEditorProps)
   const [values, setValues] = useState<FormValues>(() => payloadToForm(defs, item.payload));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [confirming, setConfirming] = useState(false);
 
   const dirty = JSON.stringify(values) !== JSON.stringify(payloadToForm(defs, item.payload));
 
@@ -99,15 +100,31 @@ export default function ItemEditor({ item, onPatch, onDelete }: ItemEditorProps)
         )}
 
         {onDelete && (
-          <Button
-            size="sm"
-            variant="danger"
-            disabled={busy}
-            onClick={() => run(onDelete)}
-            className="ml-auto"
-          >
-            Delete
-          </Button>
+          <div className="ml-auto flex items-center gap-1.5">
+            {confirming && (
+              <>
+                <Button size="sm" variant="dangerSolid" disabled={busy} onClick={() => run(onDelete)}>
+                  {busy ? 'Deleting…' : 'Delete'}
+                </Button>
+                <Button size="sm" variant="ghost" disabled={busy} onClick={() => setConfirming(false)}>
+                  Cancel
+                </Button>
+              </>
+            )}
+            {!confirming && (
+              <Button
+                size="sm"
+                variant="danger"
+                disabled={busy}
+                onClick={() => {
+                  setError('');
+                  setConfirming(true);
+                }}
+              >
+                Delete
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </Card>
