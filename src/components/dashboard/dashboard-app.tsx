@@ -71,7 +71,7 @@ export default function DashboardApp() {
     load().catch(() =>
       setLoadError('Could not load your dashboard. Check your connection and refresh.')
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only
+    // mount-only: later list changes arrive through the action handlers below
   }, []);
 
   // The landing page hands a pasted posting over on this channel; adopt it
