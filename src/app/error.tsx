@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Button, buttonCls } from '@/components/ui/button';
+import { randomCareerTip } from '@/lib/fun/career-wisdom';
 
 export default function ErrorBoundary({
   error,
@@ -17,6 +18,10 @@ export default function ErrorBoundary({
     console.error(error);
   }, [error]);
 
+  // One tip per error instance — keyed on digest so a retry that produces a
+  // different error gets a fresh quip.
+  const tip = useMemo(() => randomCareerTip(), [error.digest]);
+
   return (
     <main className="mx-auto w-full max-w-[72ch] flex-1 px-6 py-24">
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">
@@ -30,6 +35,9 @@ export default function ErrorBoundary({
       {error.digest && (
         <p className="mt-3 text-xs text-faint">Reference: {error.digest}</p>
       )}
+      <blockquote className="mt-6 border-l-2 border-line pl-4 text-[13px] text-mute italic">
+        &ldquo;{tip.text}&rdquo;
+      </blockquote>
       <div className="mt-8 flex flex-wrap gap-2">
         <Button onClick={retry}>Try again</Button>
         <Link href="/" className={buttonCls('secondary')}>

@@ -15,6 +15,7 @@ import Progress from '@/components/ui/progress';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { buttonCls } from '@/components/ui/button';
 import { SAMPLE_ENTRIES } from '@/lib/domain/sample-profile';
+import TipCarousel from '@/components/fun/tip-carousel';
 
 // Every section counts toward completeness — derived, not re-listed, so a
 // new ItemType can't silently skip the panel (TYPE_FIELDS is Record<ItemType>).
@@ -375,6 +376,11 @@ export default function DashboardApp() {
             <SectionHeading id="cv-list">Generated CVs</SectionHeading>
           </div>
           <VersionList resumes={resumes} onDelete={removeResume} />
+        </section>
+
+        {/* Career wisdom — a rotating tip to close the page */}
+        <section aria-label="Career wisdom">
+          <TipCarousel />
         </section>
       </div>
     </main>
