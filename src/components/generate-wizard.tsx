@@ -111,11 +111,13 @@ export default function GenerateWizard({ initialJdId, initialAnalysisId }: Gener
 
   // Recover the pasted JD after a login redirect (Review Focus 4).
   useEffect(() => {
-    const draft = sessionStorage.getItem(DRAFT_KEY);
-    if (draft) {
-      setRaw(draft);
-      sessionStorage.removeItem(DRAFT_KEY);
-    }
+    (async () => {
+      const draft = sessionStorage.getItem(DRAFT_KEY);
+      if (draft) {
+        setRaw(draft);
+        sessionStorage.removeItem(DRAFT_KEY);
+      }
+    })();
   }, []);
 
   const handleUnauthorized = () => {

@@ -55,7 +55,14 @@ export default function ProfileEditor() {
   }, []);
 
   useEffect(() => {
-    load().catch(() => setLoadError('Could not load your profile. Please sign in again.'));
+    // setState lands after an await here, so no cascading render on mount.
+    (async () => {
+      try {
+        await load();
+      } catch {
+        setLoadError('Could not load your profile. Please sign in again.');
+      }
+    })();
   }, [load]);
 
   const patchItem = async (id: string, body: Record<string, unknown>) => {

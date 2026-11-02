@@ -4,24 +4,17 @@ import Chip from '@/components/ui/chip';
 interface ChipProps {
   label: string;
   items: string[];
-  maxChips: number;
-  renderedChips: { count: number; overflow: number };
 }
 
-function ChipSection({ label, items, maxChips, renderedChips }: ChipProps) {
-  const remaining = maxChips - renderedChips.count;
-  const chipsToShow = items.slice(0, Math.max(0, remaining));
-
-  if (chipsToShow.length === 0) {
+function ChipSection({ label, items }: ChipProps) {
+  if (items.length === 0) {
     return null;
   }
-
-  renderedChips.count += chipsToShow.length;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="mr-1 text-sm font-medium text-mute">{label}:</span>
-      {chipsToShow.map((item, idx) => (
+      {items.map((item, idx) => (
         <Chip key={`${label}-${idx}`}>{item}</Chip>
       ))}
     </div>
@@ -34,7 +27,6 @@ interface JdChipsProps {
 
 export function JdChips({ extraction }: JdChipsProps) {
   const MAX_CHIPS = 24;
-  const renderedChips = { count: 0, overflow: 0 };
 
   const sections = [
     { label: 'Required', items: extraction.requiredSkills },
@@ -44,22 +36,24 @@ export function JdChips({ extraction }: JdChipsProps) {
   ];
 
   const totalChips = sections.reduce((sum, s) => sum + s.items.length, 0);
-  renderedChips.overflow = Math.max(0, totalChips - MAX_CHIPS);
+  const overflow = Math.max(0, totalChips - MAX_CHIPS);
+
+  // Earlier sections get first claim on the shared cap, same as before.
+  let budget = MAX_CHIPS;
+  const shown = sections.map((s) => {
+    const items = s.items.slice(0, budget);
+    budget -= items.length;
+    return { label: s.label, items };
+  });
 
   return (
     <div className="space-y-2">
-      {sections.map((section) => (
-        <ChipSection
-          key={section.label}
-          label={section.label}
-          items={section.items}
-          maxChips={MAX_CHIPS}
-          renderedChips={renderedChips}
-        />
+      {shown.map((section) => (
+        <ChipSection key={section.label} label={section.label} items={section.items} />
       ))}
-      {renderedChips.overflow > 0 && (
+      {overflow > 0 && (
         <Chip tone="neutral" className="border border-line">
-          +{renderedChips.overflow}
+          +{overflow}
         </Chip>
       )}
     </div>

@@ -89,7 +89,13 @@ export default function ResumeEditor({
   );
 
   useEffect(() => {
-    refit(resume).catch(() => {});
+    (async () => {
+      try {
+        await refit(resume);
+      } catch {
+        // advisory; refit keeps the last known state on failure
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

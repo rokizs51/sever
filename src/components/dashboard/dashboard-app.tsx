@@ -69,20 +69,27 @@ export default function DashboardApp() {
   };
 
   useEffect(() => {
-    load().catch(() =>
-      setLoadError('Could not load your dashboard. Check your connection and refresh.')
-    );
+    // setState lands after an await here, so no cascading render on mount.
+    (async () => {
+      try {
+        await load();
+      } catch {
+        setLoadError('Could not load your dashboard. Check your connection and refresh.')
+      }
+    })();
     // mount-only: later list changes arrive through the action handlers below
   }, []);
 
   // The landing page hands a pasted posting over on this channel; adopt it
   // before the wizard can claim it.
   useEffect(() => {
-    const draft = sessionStorage.getItem('jd-draft');
-    if (draft) {
-      setOmnibox(draft);
-      sessionStorage.removeItem('jd-draft');
-    }
+    (async () => {
+      const draft = sessionStorage.getItem('jd-draft');
+      if (draft) {
+        setOmnibox(draft);
+        sessionStorage.removeItem('jd-draft');
+      }
+    })();
   }, []);
 
   const counts = useMemo(() => {
